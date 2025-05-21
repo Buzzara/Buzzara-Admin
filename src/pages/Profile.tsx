@@ -1,157 +1,159 @@
-// src/pages/Profile.tsx
-import React, { useState, useEffect } from 'react'
-import ProfileCard from '../components/ProfileCard/ProfileCard'
-import '../styles/profile.scss'
+import React, { useState, useEffect } from "react";
+import ProfileCard from "../components/ProfileCard/ProfileCard";
+import "../styles/profile.scss";
 
 import {
   uploadUserPhotos,
-  PhotoUploadResponse
-} from '../services/profile/usuario/userUploadFotosPerfil'
+  PhotoUploadResponse,
+} from "../services/profile/usuario/userUploadFotosPerfil";
 
-import { fetchCurrentUserProfile } from '../services/profile/usuario/userGetUsuario'
-import type { UserProfile } from '../types/userProfile'
+import { fetchCurrentUserProfile } from "../services/profile/usuario/userGetUsuario";
+import type { UserProfile } from "../types/userProfile";
 
-import { useAuth } from '../context/AuthContext'
-import { alterarSenha } from '../services/login/userAlterarSenhaLogado'
-import { AlterarSenhaDTO, ApiResponse } from '../types/userAlterarSenhaLogado'
-import axios from 'axios'
+import { useAuth } from "../context/AuthContext";
+import { alterarSenha } from "../services/login/userAlterarSenhaLogado";
+import { AlterarSenhaDTO, ApiResponse } from "../types/userAlterarSenhaLogado";
+import axios from "axios";
 
 type ValidationErrorResponse = {
-  errors: Record<string, string[]>
-}
+    message?: string;
+  errors: Record<string, string[]>;
+};
 
 const Profile: React.FC = () => {
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   // URLs das fotos (string | undefined)
-  const [profileUrl, setProfileUrl] = useState<string | undefined>(undefined)
-  const [coverUrl, setCoverUrl]   = useState<string | undefined>(undefined)
+  const [profileUrl, setProfileUrl] = useState<string | undefined>(undefined);
+  const [coverUrl, setCoverUrl] = useState<string | undefined>(undefined);
 
   // Estado de upload
-  const [profileFile, setProfileFile]   = useState<File | null>(null)
-  const [coverFile, setCoverFile]       = useState<File | null>(null)
-  const [uploadLoading, setUploadLoading] = useState(false)
-  const [uploadError, setUploadError]     = useState<string>()
+  const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadError, setUploadError] = useState<string>();
 
   // Estado de senha
-  const [oldPassword, setOldPassword]           = useState('')
-  const [newPassword, setNewPassword]           = useState('')
-  const [confirmNewPassword, setConfirmNewPassword] = useState('')
-  const [errors, setErrors]                     = useState<string[]>([])
-  const [successMessage, setSuccessMessage]     = useState('')
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [errors, setErrors] = useState<string[]>([]);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Carrega perfil (incluindo fotoPerfilUrl e fotoCapaUrl)
   useEffect(() => {
     async function loadProfile() {
       try {
-        const data: UserProfile = await fetchCurrentUserProfile()
+        const data: UserProfile = await fetchCurrentUserProfile();
         // Converte null → undefined para casar com useState<string | undefined>
-        setProfileUrl(data.fotoPerfilUrl ?? undefined)
-        setCoverUrl(data.fotoCapaUrl    ?? undefined)
+        setProfileUrl(data.fotoPerfilUrl ?? undefined);
+        setCoverUrl(data.fotoCapaUrl ?? undefined);
       } catch (err) {
-        console.error('[Profile] error fetching profile:', err)
+        console.error("[Profile] error fetching profile:", err);
       }
     }
-    loadProfile()
-  }, [])
+    loadProfile();
+  }, []);
 
   // Seleção de arquivos
   const handleProfileSelect = (file: File) => {
-    setProfileFile(file)
-    setProfileUrl(URL.createObjectURL(file))
-  }
+    setProfileFile(file);
+    setProfileUrl(URL.createObjectURL(file));
+  };
   const handleCoverSelect = (file: File) => {
-    setCoverFile(file)
-    setCoverUrl(URL.createObjectURL(file))
-  }
+    setCoverFile(file);
+    setCoverUrl(URL.createObjectURL(file));
+  };
 
   // Envio de fotos
   const handleSavePhotos = async () => {
     if (!profileFile && !coverFile) {
-      setUploadError('Selecione ao menos uma imagem.')
-      return
+      setUploadError("Selecione ao menos uma imagem.");
+      return;
     }
-    setUploadError(undefined)
-    setUploadLoading(true)
+    setUploadError(undefined);
+    setUploadLoading(true);
     try {
-      const result: PhotoUploadResponse = await uploadUserPhotos(
-        user!.id,
-        { profilePhoto: profileFile ?? undefined, coverPhoto: coverFile ?? undefined }
-      )
-      // result retorna sempre string, então sem necessidade de ??
-      if (result.fotoPerfilUrl) setProfileUrl(result.fotoPerfilUrl)
-      if (result.fotoCapaUrl)   setCoverUrl(result.fotoCapaUrl)
-      setProfileFile(null)
-      setCoverFile(null)
+      const result: PhotoUploadResponse = await uploadUserPhotos(user!.id, {
+        profilePhoto: profileFile ?? undefined,
+        coverPhoto: coverFile ?? undefined,
+      });
+      if (result.fotoPerfilUrl) setProfileUrl(result.fotoPerfilUrl);
+      if (result.fotoCapaUrl) setCoverUrl(result.fotoCapaUrl);
+      setProfileFile(null);
+      setCoverFile(null);
     } catch (err: unknown) {
-      let msg = 'Erro no upload'
+      let msg = "Erro no upload";
       if (axios.isAxiosError(err) && err.response?.data?.message) {
-        msg = err.response.data.message
+        msg = err.response.data.message;
       } else if (err instanceof Error) {
-        msg = err.message
+        msg = err.message;
       }
-      setUploadError(msg)
+      setUploadError(msg);
     } finally {
-      setUploadLoading(false)
+      setUploadLoading(false);
     }
-  }
+  };
 
   // Alterar senha
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrors([])
-    setSuccessMessage('')
+    e.preventDefault();
+    setErrors([]);
+    setSuccessMessage("");
 
     if (newPassword !== confirmNewPassword) {
-      setErrors(['A confirmação não confere com a nova senha.'])
-      return
+      setErrors(["A confirmação não confere com a nova senha."]);
+      return;
     }
 
     const payload: AlterarSenhaDTO = {
       senhaAtual: oldPassword,
       novaSenha: newPassword,
-      confirmarNovaSenha: confirmNewPassword
-    }
+      confirmarNovaSenha: confirmNewPassword,
+    };
 
     try {
-      const response = await alterarSenha(payload)
+      const response = await alterarSenha(payload);
       if (response.errors?.length) {
-        setErrors(response.errors)
+        setErrors(response.errors);
       } else {
-        setSuccessMessage(response.message ?? 'Senha alterada com sucesso!')
-        setOldPassword('')
-        setNewPassword('')
-        setConfirmNewPassword('')
+        setSuccessMessage(response.message ?? "Senha alterada com sucesso!");
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmNewPassword("");
       }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        const data = err.response?.data as ApiResponse | ValidationErrorResponse
+        const data = err.response?.data as
+          | ApiResponse
+          | ValidationErrorResponse;
         if (Array.isArray(data.errors)) {
-          setErrors(data.errors)
+          setErrors(data.errors);
         } else if (data.errors) {
-          setErrors(Object.values(data.errors).flat())
+          setErrors(Object.values(data.errors).flat());
         } else if (data.message) {
-          setErrors([data.message])
+          setErrors([data.message]);
         } else {
-          setErrors(['Erro ao atualizar senha.'])
+          setErrors(["Erro ao atualizar senha."]);
         }
       } else {
-        setErrors(['Erro ao atualizar senha.'])
+        setErrors(["Erro ao atualizar senha."]);
       }
     }
-  }
+  };
 
   return (
     <div className="profile-page">
       <ProfileCard
-        name={user?.nome || ''}
-        role={user?.role || ''}
+        name={user?.nome || ""}
+        role={user?.role || ""}
         avatarUrl={profileUrl}
         coverUrl={coverUrl}
         onProfileSelect={handleProfileSelect}
         onCoverSelect={handleCoverSelect}
         onSavePhotos={handleSavePhotos}
-        loading={uploadLoading}
+        profileLoading={uploadLoading}
+        coverLoading={uploadLoading}
         uploadError={uploadError}
       />
 
@@ -161,7 +163,9 @@ const Profile: React.FC = () => {
 
         <div className="form-messages">
           {errors.map((err, i) => (
-            <div key={i} className="message error">{err}</div>
+            <div key={i} className="message error">
+              {err}
+            </div>
           ))}
           {successMessage && (
             <div className="message success">{successMessage}</div>
@@ -175,7 +179,7 @@ const Profile: React.FC = () => {
               type="password"
               id="oldPassword"
               value={oldPassword}
-              onChange={e => setOldPassword(e.target.value)}
+              onChange={(e) => setOldPassword(e.target.value)}
               required
             />
           </div>
@@ -185,7 +189,7 @@ const Profile: React.FC = () => {
               type="password"
               id="newPassword"
               value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
+              onChange={(e) => setNewPassword(e.target.value)}
               required
             />
           </div>
@@ -195,7 +199,7 @@ const Profile: React.FC = () => {
               type="password"
               id="confirmNewPassword"
               value={confirmNewPassword}
-              onChange={e => setConfirmNewPassword(e.target.value)}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
               required
             />
           </div>
@@ -205,7 +209,7 @@ const Profile: React.FC = () => {
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Profile
+export default Profile;

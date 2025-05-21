@@ -1,5 +1,4 @@
-// src/pages/Dashboard.tsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   AreaChart,
   Area,
@@ -23,16 +22,16 @@ import {
 import "../styles/dashboard.scss";
 
 import { userGetAnuncios } from "../services/anuncio/userBuscaAnuncio";
-import { userGetAnuncioResponse } from "../types/userBuscaAnuncio";
+import type { userGetAnuncioResponse } from "../types/userBuscaAnuncio";
 
 export default function Dashboard() {
-  // estado das métricas dinâmicas
+  // estados das métricas
   const [totalAds, setTotalAds] = useState(0);
   const [activeAds, setActiveAds] = useState(0);
   const [totalPhotos, setTotalPhotos] = useState(0);
   const [totalVideos, setTotalVideos] = useState(0);
 
-  // (ainda mantemos mock para os gráficos)
+  // dados mockados para gráficos (pode vir de API depois)
   const viewsData = [
     { day: "01", views: 120 },
     { day: "05", views: 240 },
@@ -63,21 +62,23 @@ export default function Dashboard() {
     async function loadMetrics() {
       try {
         const data: userGetAnuncioResponse[] = await userGetAnuncios();
-        
+
         setTotalAds(data.length);
+        // Sem campo status definido, consideramos todos como ativos
+        setActiveAds(data.length);
 
-        // aqui consideramos que todo anúncio retornado é "Ativo"
-        // se você tiver o status no response, filtre por ele
-        setActiveAds(data.filter(a => /* a.status === 'Ativo' */ true).length);
-
-        // soma total de fotos e vídeos
-        const photosCount = data.reduce((sum, a) => sum + (a.fotos?.length || 0), 0);
-        const videosCount = data.reduce((sum, a) => sum + (a.videos?.length || 0), 0);
-
+        const photosCount = data.reduce(
+          (sum, item) => sum + (item.fotos?.length || 0),
+          0
+        );
+        const videosCount = data.reduce(
+          (sum, item) => sum + (item.videos?.length || 0),
+          0
+        );
         setTotalPhotos(photosCount);
         setTotalVideos(videosCount);
       } catch (err) {
-        console.error("Erro ao carregar anúncios:", err);
+        console.error("Erro ao carregar métricas:", err);
       }
     }
     loadMetrics();
@@ -98,33 +99,29 @@ export default function Dashboard() {
           <p>{activeAds}</p>
         </div>
         <div className="card">
-          <h3>Anúncios Pausados</h3>
-          <p>—{/* caso tenha conteudo de pausados */}</p>
-        </div>
-        <div className="card">
           <h3>
-            Fotos&nbsp;<ImageIcon size={16} />
+            Fotos <ImageIcon size={16} />
           </h3>
           <p>{totalPhotos}</p>
         </div>
         <div className="card">
           <h3>
-            Vídeos&nbsp;<VideoIcon size={16} />
+            Vídeos <VideoIcon size={16} />
           </h3>
           <p>{totalVideos}</p>
         </div>
       </div>
 
       {/* Gráficos */}
-      <div
-        className="chart-grid"
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "1.5rem" }}
-      >
+      <div className="chart-grid">
         {/* Visualizações por Dia */}
-        <div className="chart-card">
+        <div className="chart-card" key="views">
           <h3>Visualizações por Dia</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={viewsData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+            <AreaChart
+              data={viewsData}
+              margin={{ top: 20, right: 20, left: 0, bottom: 0 }}
+            >
               <defs>
                 <linearGradient id="gradientViews" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#50fa7b" stopOpacity={0.6} />
@@ -132,8 +129,15 @@ export default function Dashboard() {
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="#44475a" strokeDasharray="5 5" />
-              <XAxis dataKey="day" tick={{ fill: "#f8f8f2" }} axisLine={{ stroke: "#6272a4" }} />
-              <YAxis tick={{ fill: "#f8f8f2" }} axisLine={{ stroke: "#6272a4" }} />
+              <XAxis
+                dataKey="day"
+                tick={{ fill: "#f8f8f2" }}
+                axisLine={{ stroke: "#6272a4" }}
+              />
+              <YAxis
+                tick={{ fill: "#f8f8f2" }}
+                axisLine={{ stroke: "#6272a4" }}
+              />
               <Tooltip
                 contentStyle={{ backgroundColor: "#282a36", border: "1px solid #6272a4" }}
                 labelStyle={{ color: "#f8f8f2" }}
@@ -153,7 +157,7 @@ export default function Dashboard() {
         </div>
 
         {/* Origem das Visitas */}
-        <div className="chart-card">
+        <div className="chart-card" key="source">
           <h3>Origem das Visitas</h3>
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
@@ -175,7 +179,7 @@ export default function Dashboard() {
                 label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
               >
                 {sourceData.map((entry, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip
@@ -187,7 +191,7 @@ export default function Dashboard() {
         </div>
 
         {/* Top Cidades */}
-        <div className="chart-card">
+        <div className="chart-card" key="cities">
           <h3>Top Cidades</h3>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={cityData} margin={{ top: 40, right: 20, left: 0, bottom: 0 }}>
@@ -206,7 +210,7 @@ export default function Dashboard() {
                 contentStyle={{ backgroundColor: "#282a36", border: "1px solid #6272a4" }}
                 itemStyle={{ color: "#8be9fd" }}
               />
-              <Bar dataKey="visits" fill="#8be9fd" barSize={40} radius={[6, 6, 0, 0]}>
+              <Bar dataKey="visits" barSize={40} radius={[6, 6, 0, 0]}>
                 <LabelList dataKey="visits" position="top" fill="#f8f8f2" fontSize={12} />
               </Bar>
             </BarChart>
