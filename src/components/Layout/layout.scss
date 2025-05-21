@@ -1,0 +1,29 @@
+ /* 1) Garanta 100% de altura desde o topo */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* 2) Deixe o layout ocupar todo esse espaço */
+.layout {
+  display: flex;
+  height: 100%;      /* ou 100vh, mas 100% funciona se html/body forem 100% */
+}
+
+/* 3) Ajuste o main-content */
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  background-color: #f3f6fe;
+  /* já com margin-left no desktop e 0 no mobile */
+  margin-left: 240px;
+  transition: margin-left 0.3s ease;
+  overflow-y: auto;  /* deixa rolar se o conteúdo for maior que a altura */
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+}

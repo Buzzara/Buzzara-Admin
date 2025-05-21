@@ -1,0 +1,88 @@
+.profile-page {
+  width: 100%;
+  margin: 2rem 0;
+  padding: 0 1rem;
+
+  .security-section {
+    background-color: #f3f6fe;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-top: 2rem;
+    color: #1e1e2f;
+
+    h2 {
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
+    }
+
+    p {
+      margin-bottom: 1.5rem;
+      color: #1e1e2f;
+    }
+
+    // Container de mensagens de feedback
+    .form-messages {
+      margin-bottom: 1rem;
+
+      .message {
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .error {
+        background-color: #fdecea;
+        color: #b71c1c;
+        border: 1px solid #f5c6cb;
+      }
+
+      .success {
+        background-color: #e8f5e9;
+        color: #256029;
+        border: 1px solid #a5d6a7;
+      }
+    }
+
+    .security-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+
+        label {
+          margin-bottom: 0.5rem;
+          font-weight: 500;
+        }
+
+        input {
+          background-color: #fff;
+          border-radius: 20px;
+          padding: 0.75rem;
+          border: 1px solid #ccc;
+          font-size: 1rem;
+        }
+      }
+
+      .btn-update-password {
+        width: fit-content;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 20px;
+        background-color: #f2da05;
+        color: #fff;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+          background-color: #e0d144;
+        }
+      }
+    }
+  }
+}
