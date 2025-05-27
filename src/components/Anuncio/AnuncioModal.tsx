@@ -22,21 +22,25 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   const [descricao, setDescricao] = useState("");
   const [preco, setPreco] = useState<number>(0);
   const [categoria, setCategoria] = useState("Acompanhante");
-  const [contato, setContato] = useState("");
   const [lugarEncontro, setLugarEncontro] = useState("");
   const [idade, setIdade] = useState<number | "">("");
   const [peso, setPeso] = useState<number | "">("");
   const [altura, setAltura] = useState<number | "">("");
-  const [disponibilidadeDataInicio, setDisponibilidadeDataInicio] = useState("");
+  const [disponibilidadeDataInicio, setDisponibilidadeDataInicio] =
+    useState("");
   const [disponibilidadeDataFim, setDisponibilidadeDataFim] = useState("");
-  const [disponibilidadeHoraInicio, setDisponibilidadeHoraInicio] = useState("");
+  const [disponibilidadeHoraInicio, setDisponibilidadeHoraInicio] =
+    useState("");
   const [disponibilidadeHoraFim, setDisponibilidadeHoraFim] = useState("");
   const [fotos, setFotos] = useState<File[]>([]);
   const [video, setVideo] = useState<File | null>(null);
   const [photoSlots, setPhotoSlots] = useState(4);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [endereco, setEndereco] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
+  const [bairro, setBairro] = useState("");
   // refs para input hidden
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -54,21 +58,28 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
     e.target.value = "";
   };
 
-  // recebe o vídeo (apenas um) 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (file) setVideo(file);
     e.target.value = "";
   };
 
-  // adiciona mais slots de foto
   const handleLoadMorePhotos = () => setPhotoSlots((prev) => prev + 4);
 
-  // submissão final
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+     console.log("📤 Enviando formulário com dados:");
+    console.log({
+      servicoID, nome, descricao, preco, categoria, 
+      lugarEncontro, idade, peso, altura,
+      disponibilidadeDataInicio, disponibilidadeDataFim,
+      disponibilidadeHoraInicio, disponibilidadeHoraFim,
+      endereco, cidade, estado, bairro,
+      fotos, video
+    });
 
     try {
       const form = new FormData();
@@ -77,7 +88,6 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
       form.append("descricao", descricao);
       form.append("preco", preco.toString());
       form.append("categoria", categoria);
-      form.append("contato", contato);
       form.append("lugarEncontro", lugarEncontro);
       if (idade !== "") form.append("idade", String(idade));
       if (peso !== "") form.append("peso", String(peso));
@@ -105,12 +115,10 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
 
       onSuccess(anuncio);
 
-      // limpa tudo
       setNome("");
       setDescricao("");
       setPreco(0);
       setCategoria("Acompanhante");
-      setContato("");
       setLugarEncontro("");
       setIdade("");
       setPeso("");
@@ -126,9 +134,7 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
       onClose();
     } catch (err) {
       console.error("Erro ao criar anúncio:", err);
-      setError(
-        err instanceof Error ? err.message : "Erro desconhecido"
-      );
+      setError(err instanceof Error ? err.message : "Erro desconhecido");
     } finally {
       setLoading(false);
     }
@@ -137,7 +143,9 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   return (
     <div className="modal-overlay">
       <div className="modal">
-        <button className="modal__close" onClick={onClose}>&times;</button>
+        <button className="modal__close" onClick={onClose}>
+          &times;
+        </button>
         <h2 className="modal__title">Novo Anúncio</h2>
 
         {error && <div className="modal__error">{error}</div>}
@@ -162,6 +170,48 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
                 className="modal__textarea"
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
+                required
+              />
+            </label>
+
+            {/* Endereço */}
+            <label className="modal__label">
+              Endereço
+              <input
+                type="text"
+                className="modal__input"
+                value={endereco}
+                onChange={(e) => setEndereco(e.target.value)}
+                required
+              />
+            </label>
+            <label className="modal__label">
+              Cidade
+              <input
+                type="text"
+                className="modal__input"
+                value={cidade}
+                onChange={(e) => setCidade(e.target.value)}
+                required
+              />
+            </label>
+            <label className="modal__label">
+              Estado
+              <input
+                type="text"
+                className="modal__input"
+                value={estado}
+                onChange={(e) => setEstado(e.target.value)}
+                required
+              />
+            </label>
+            <label className="modal__label">
+              Bairro
+              <input
+                type="text"
+                className="modal__input"
+                value={bairro}
+                onChange={(e) => setBairro(e.target.value)}
                 required
               />
             </label>
@@ -191,17 +241,6 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
                 <option>Vídeo Chamadas</option>
                 <option>Sexting</option>
               </select>
-            </label>
-
-            <label className="modal__label">
-              Contato
-              <input
-                type="text"
-                className="modal__input"
-                value={contato}
-                onChange={(e) => setContato(e.target.value)}
-                required
-              />
             </label>
 
             <label className="modal__label">

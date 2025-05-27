@@ -83,7 +83,6 @@ const AnunciosPage: React.FC = () => {
   const handleFilterChange = (e: ChangeEvent<HTMLSelectElement>) =>
     setFilter(e.target.value as FilterOption);
 
-  // Recebe o retorno do NewAnuncioModal (já tipado como AnuncioResponse)
   function handleCreateSuccess(item: AnuncioResponse) {
     const novo: Anuncio = {
       id: String(item.id),
@@ -190,7 +189,6 @@ const AnunciosPage: React.FC = () => {
         <button disabled>Próximo</button>
       </div>
 
-      {/* Modal de novo anúncio */}
       <NewAnuncioModal
         isOpen={isNewOpen}
         servicoID={meuServicoId}
@@ -198,7 +196,6 @@ const AnunciosPage: React.FC = () => {
         onSuccess={handleCreateSuccess}
       />
 
-      {/* Modal de edição */}
       {editing && (
         <EditAnuncioModal
           isOpen
@@ -206,8 +203,8 @@ const AnunciosPage: React.FC = () => {
             id: Number(editing.id),
             servicoID: Number(editing.id),
             nome: editing.title,
-            descricao: "", // ou carregue a descrição real
-            preco: 0, // ou carregue o preço real
+            descricao: "", 
+            preco: 0, 
             fotos: editing.fotos.map((f) => f.url),
             video: editing.videos[0]?.url ?? "",
             dataCriacao: editing.rawDate,
@@ -235,3 +232,6 @@ const AnunciosPage: React.FC = () => {
 };
 
 export default AnunciosPage;
+
+
+
