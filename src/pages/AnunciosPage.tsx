@@ -1,4 +1,3 @@
-// src/pages/AnunciosPage.tsx
 import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   Edit,
@@ -12,6 +11,7 @@ import NewAnuncioModal from "../components/Anuncio/AnuncioModal";
 import EditAnuncioModal from "../components/EditAnuncioModal/EditAnuncioModal";
 
 import { userGetAnuncios } from "../services/anuncio/userBuscaAnuncio";
+
 import type { userGetAnuncioResponse } from "../types/userBuscaAnuncio";
 import type { AnuncioResponse } from "../types/userAnuncio";
 
@@ -43,18 +43,23 @@ const FILTER_OPTIONS = ["Todos", "Ativo", "Pausado", "Expirado"] as const;
 type FilterOption = (typeof FILTER_OPTIONS)[number];
 
 const AnunciosPage: React.FC = () => {
+  const [meuServicoId, setMeuServicoId] = useState<number | null>(null);
+
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterOption>("Todos");
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [editing, setEditing] = useState<Anuncio | null>(null);
 
-  const meuServicoId = 0;
-
   useEffect(() => {
     (async () => {
       try {
         const data: userGetAnuncioResponse[] = await userGetAnuncios();
+
+        if (data.length > 0) {
+          setMeuServicoId(data[0].servicoID);
+        }
+
         const list: Anuncio[] = data.map((item) => ({
           id: String(item.servicoID),
           title: item.nome,
@@ -70,7 +75,7 @@ const AnunciosPage: React.FC = () => {
         console.error("Erro ao buscar anúncios:", err);
       }
     })();
-  }, [meuServicoId]);
+  }, []);
 
   const filtered = anuncios.filter(
     (a) =>
@@ -92,9 +97,7 @@ const AnunciosPage: React.FC = () => {
       status: "Ativo",
       createdAt: new Date(item.dataCriacao).toLocaleDateString(),
       fotos: item.fotos.map((url, idx) => ({ fotoAnuncioID: idx, url })),
-      videos: item.video
-        ? [{ videoAnuncioID: 0, url: item.video }]
-        : [],
+      videos: item.video ? [{ videoAnuncioID: 0, url: item.video }] : [],
     };
     setAnuncios((prev) => [novo, ...prev]);
     setIsNewOpen(false);
@@ -189,12 +192,14 @@ const AnunciosPage: React.FC = () => {
         <button disabled>Próximo</button>
       </div>
 
-      <NewAnuncioModal
-        isOpen={isNewOpen}
-        servicoID={meuServicoId}
-        onClose={() => setIsNewOpen(false)}
-        onSuccess={handleCreateSuccess}
-      />
+      {isNewOpen && meuServicoId !== null && (
+        <NewAnuncioModal
+          isOpen={true}
+          servicoID={meuServicoId}
+          onClose={() => setIsNewOpen(false)}
+          onSuccess={handleCreateSuccess}
+        />
+      )}
 
       {editing && (
         <EditAnuncioModal
@@ -203,8 +208,8 @@ const AnunciosPage: React.FC = () => {
             id: Number(editing.id),
             servicoID: Number(editing.id),
             nome: editing.title,
-            descricao: "", 
-            preco: 0, 
+            descricao: "",
+            preco: 0,
             fotos: editing.fotos.map((f) => f.url),
             video: editing.videos[0]?.url ?? "",
             dataCriacao: editing.rawDate,
@@ -232,6 +237,3 @@ const AnunciosPage: React.FC = () => {
 };
 
 export default AnunciosPage;
-
-
-

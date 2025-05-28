@@ -1,5 +1,5 @@
 // src/Anuncio/NewAnuncioModal.tsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import api from "../../services/api";
 import { AnuncioResponse } from "../../types/userAnuncio";
 import "./NewAnuncioModal.scss";
@@ -41,6 +41,23 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   const [cidade, setCidade] = useState("");
   const [estado, setEstado] = useState("");
   const [bairro, setBairro] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLatitude(position.coords.latitude);
+          setLongitude(position.coords.longitude);
+        },
+        (error) => {
+          console.warn("Erro ao obter localização:", error);
+        }
+      );
+    }
+  }, []);
+
   // refs para input hidden
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -66,79 +83,108 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
 
   const handleLoadMorePhotos = () => setPhotoSlots((prev) => prev + 4);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
 
-     console.log("📤 Enviando formulário com dados:");
-    console.log({
-      servicoID, nome, descricao, preco, categoria, 
-      lugarEncontro, idade, peso, altura,
-      disponibilidadeDataInicio, disponibilidadeDataFim,
-      disponibilidadeHoraInicio, disponibilidadeHoraFim,
-      endereco, cidade, estado, bairro,
-      fotos, video
+  try {
+    const form = new FormData();
+    form.append("servicoID", servicoID.toString());
+    form.append("nome", nome);
+    form.append("descricao", descricao);
+    form.append("preco", preco.toString());
+    form.append("categoria", categoria);
+    form.append("lugarEncontro", lugarEncontro);
+    if (idade !== "") form.append("idade", String(idade));
+    if (peso !== "") form.append("peso", String(peso));
+    if (altura !== "") form.append("altura", String(altura));
+
+    form.append("dataCriacao", new Date().toISOString());
+
+    // 🗓️ Disponibilidade formatada
+    function getWeekdayName(dateString: string) {
+      const days = [
+        "Domingo", "Segunda-feira", "Terça-feira",
+        "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"
+      ];
+      const date = new Date(dateString);
+      return days[date.getDay()];
+    }
+
+    let disponibilidade = "";
+    if (
+      disponibilidadeDataInicio &&
+      disponibilidadeDataFim &&
+      disponibilidadeHoraInicio &&
+      disponibilidadeHoraFim
+    ) {
+      const diaInicio = getWeekdayName(disponibilidadeDataInicio);
+      const diaFim = getWeekdayName(disponibilidadeDataFim);
+
+      disponibilidade = diaInicio === diaFim
+        ? `${diaInicio}, horário: ${disponibilidadeHoraInicio} às ${disponibilidadeHoraFim}`
+        : `${diaInicio} até ${diaFim}, horário: ${disponibilidadeHoraInicio} às ${disponibilidadeHoraFim}`;
+
+      form.append("disponibilidade", disponibilidade);
+      console.log("🕒 Disponibilidade formatada:", disponibilidade);
+    } else {
+      console.warn("⚠️ Dados de disponibilidade incompletos. Nada será enviado.");
+    }
+
+    // 📍 Localização — campos individuais, conforme o backend espera
+    form.append("endereco", endereco);
+    form.append("cidade", cidade);
+    form.append("estado", estado);
+    form.append("bairro", bairro);
+    if (latitude !== null) form.append("latitude", latitude.toString());
+    if (longitude !== null) form.append("longitude", longitude.toString());
+
+    // 📷 Mídia
+    fotos.forEach((file) => form.append("Fotos", file));
+    if (video) form.append("Video", video);
+
+    console.log("📤 Dados finais enviados:", {
+      servicoID,
+      nome,
+      descricao,
+      preco,
+      categoria,
+      lugarEncontro,
+      idade,
+      peso,
+      altura,
+      disponibilidade,
+      endereco,
+      cidade,
+      estado,
+      bairro,
+      latitude,
+      longitude,
+      fotosCount: fotos.length,
+      video: video ? "✔️" : "❌",
     });
 
-    try {
-      const form = new FormData();
-      form.append("servicoID", servicoID.toString());
-      form.append("nome", nome);
-      form.append("descricao", descricao);
-      form.append("preco", preco.toString());
-      form.append("categoria", categoria);
-      form.append("lugarEncontro", lugarEncontro);
-      if (idade !== "") form.append("idade", String(idade));
-      if (peso !== "") form.append("peso", String(peso));
-      if (altura !== "") form.append("altura", String(altura));
+    const { data: anuncio } = await api.post<AnuncioResponse>(
+      "/anuncios",
+      form,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
 
-      if (disponibilidadeDataInicio)
-        form.append("disponibilidadeDataInicio", disponibilidadeDataInicio);
-      if (disponibilidadeDataFim)
-        form.append("disponibilidadeDataFim", disponibilidadeDataFim);
-      if (disponibilidadeHoraInicio)
-        form.append("disponibilidadeHoraInicio", disponibilidadeHoraInicio);
-      if (disponibilidadeHoraFim)
-        form.append("disponibilidadeHoraFim", disponibilidadeHoraFim);
+    onSuccess(anuncio);
+    onClose();
+  } catch (err) {
+    console.error("❌ Erro ao criar anúncio:", err);
+    setError(err instanceof Error ? err.message : "Erro desconhecido");
+  } finally {
+    setLoading(false);
+  }
+};
 
-      form.append("dataCriacao", new Date().toISOString());
 
-      fotos.forEach((file) => form.append("Fotos", file));
-      if (video) form.append("Video", video);
 
-      const { data: anuncio } = await api.post<AnuncioResponse>(
-        "/anuncios",
-        form,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-
-      onSuccess(anuncio);
-
-      setNome("");
-      setDescricao("");
-      setPreco(0);
-      setCategoria("Acompanhante");
-      setLugarEncontro("");
-      setIdade("");
-      setPeso("");
-      setAltura("");
-      setDisponibilidadeDataInicio("");
-      setDisponibilidadeDataFim("");
-      setDisponibilidadeHoraInicio("");
-      setDisponibilidadeHoraFim("");
-      setFotos([]);
-      setVideo(null);
-      setPhotoSlots(4);
-
-      onClose();
-    } catch (err) {
-      console.error("Erro ao criar anúncio:", err);
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="modal-overlay">
