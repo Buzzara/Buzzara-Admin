@@ -4,6 +4,8 @@ export interface userGetAnuncioResponse {
   descricao: string;
   preco: number;
   dataCriacao: string;
+  categoria: string;
+  lugarEncontro: string;
   fotos: {
     fotoAnuncioID: number;
     url: string;

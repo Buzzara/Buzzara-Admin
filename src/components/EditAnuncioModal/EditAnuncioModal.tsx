@@ -1,3 +1,4 @@
+// src/components/EditAnuncioModal/EditAnuncioModal.tsx
 import React, { useState, useEffect, useRef } from "react";
 import api from "../../services/api";
 import { AnuncioResponse } from "../../types/userAnuncio";
@@ -16,71 +17,73 @@ export default function EditAnuncioModal({
   onClose,
   onSuccess,
 }: EditAnuncioModalProps) {
-  const [nome, setNome] = useState(anuncio.nome);
-  const [descricao, setDescricao] = useState(anuncio.descricao);
-  const [preco, setPreco] = useState<number>(anuncio.preco);
-  const [fotos, setFotos] = useState<File[]>([]);           // novos arquivos
+  const [nome, setNome] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [preco, setPreco] = useState<number>(0);
+  const [categoria, setCategoria] = useState("");
+  const [lugarEncontro, setLugarEncontro] = useState("");
+  const [fotos, setFotos] = useState<File[]>([]);
   const [videos, setVideos] = useState<File[]>([]);
-  const [existingFotos, setExistingFotos] = useState<string[]>(anuncio.fotos);
-  const [existingVideos, setExistingVideos] = useState<string[]>(
-    anuncio.video ? [anuncio.video] : []
-  );
-  const [removedFotos, setRemovedFotos] = useState<string[]>([]);
-  const [removedVideos, setRemovedVideos] = useState<string[]>([]);
+  const [existingFotos, setExistingFotos] = useState<string[]>([]);
+  const [existingVideos, setExistingVideos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fotoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
+  // Quando o modal abre ou o anúncio muda, popula os estados
   useEffect(() => {
-    if (isOpen) {
-      setNome(anuncio.nome);
-      setDescricao(anuncio.descricao);
-      setPreco(anuncio.preco);
-      setExistingFotos(anuncio.fotos);
-      setExistingVideos(anuncio.video ? [anuncio.video] : []);
-      setFotos([]);
-      setVideos([]);
-      setRemovedFotos([]);
-      setRemovedVideos([]);
-      setError(null);
-    }
+    if (!isOpen) return;
+    setNome(anuncio.nome);
+    setDescricao(anuncio.descricao);
+    setPreco(anuncio.preco);
+    setCategoria(anuncio.categoria);
+    setLugarEncontro(anuncio.lugarEncontro);
+    setExistingFotos(anuncio.fotos);
+    setExistingVideos(anuncio.video ? [anuncio.video] : []);
+    setFotos([]);
+    setVideos([]);
+    setError(null);
   }, [isOpen, anuncio]);
-
-  if (!isOpen) return null;
 
   const handleAddFoto = () => fotoInputRef.current?.click();
   const handleAddVideo = () => videoInputRef.current?.click();
 
+  // Converte FileList em File[] sem erro de tipagem
   const onFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setFotos((f) => [...f, e.target.files![0]]);
+    const files = e.target.files;
+    if (!files) return;
+    const arr: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files.item(i);
+      if (f) arr.push(f);
     }
+    setFotos(prev => [...prev, ...arr]);
     e.target.value = "";
   };
+
   const onVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setVideos((v) => [...v, e.target.files![0]]);
+    const files = e.target.files;
+    if (!files) return;
+    const arr: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const v = files.item(i);
+      if (v) arr.push(v);
     }
+    setVideos(prev => [...prev, ...arr]);
     e.target.value = "";
   };
 
-  const removeExistingFoto = (url: string) => {
-    setExistingFotos((f) => f.filter((u) => u !== url));
-    setRemovedFotos((r) => [...r, url]);
-  };
-  const removeNewFoto = (idx: number) => {
-    setFotos((f) => f.filter((_, i) => i !== idx));
-  };
+  const removeExistingFoto = (url: string) =>
+    setExistingFotos(prev => prev.filter(u => u !== url));
+  const removeNewFoto = (idx: number) =>
+    setFotos(prev => prev.filter((_, i) => i !== idx));
 
-  const removeExistingVideo = (url: string) => {
-    setExistingVideos((v) => v.filter((u) => u !== url));
-    setRemovedVideos((r) => [...r, url]);
-  };
-  const removeNewVideo = (idx: number) => {
-    setVideos((v) => v.filter((_, i) => i !== idx));
-  };
+  const removeExistingVideo = (url: string) =>
+    setExistingVideos(prev => prev.filter(u => u !== url));
+  const removeNewVideo = (idx: number) =>
+    setVideos(prev => prev.filter((_, i) => i !== idx));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,11 +95,14 @@ export default function EditAnuncioModal({
       form.append("nome", nome);
       form.append("descricao", descricao);
       form.append("preco", preco.toString());
-      form.append("removedFotos", JSON.stringify(removedFotos));
-      form.append("removedVideos", JSON.stringify(removedVideos));
+      form.append("Categoria", categoria);
+      form.append("LugarEncontro", lugarEncontro);
 
-      fotos.forEach((f) => form.append("newFotos", f));
-      videos.forEach((v) => form.append("newVideos", v));
+      existingFotos.forEach(url => form.append("existingFotos", url));
+      fotos.forEach(file => form.append("newFotos", file));
+
+      existingVideos.forEach(url => form.append("existingVideos", url));
+      videos.forEach(file => form.append("newVideos", file));
 
       const { data } = await api.put<AnuncioResponse>(
         `/anuncios/${anuncio.id}`,
@@ -107,12 +113,17 @@ export default function EditAnuncioModal({
       onSuccess(data);
       onClose();
     } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.message || "Erro inesperado");
+      console.error("Erro ao editar anúncio:", err.response?.data || err);
+      const msg = err.response?.data?.errors
+        ? Object.values(err.response.data.errors).flat().join(" | ")
+        : err.response?.data?.message || "Erro inesperado";
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay">
@@ -121,7 +132,6 @@ export default function EditAnuncioModal({
           &times;
         </button>
         <h2 className="modal__title">Editar Anúncio</h2>
-
         {error && <div className="modal__error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="modal__form">
@@ -130,27 +140,55 @@ export default function EditAnuncioModal({
             <input
               className="modal__input"
               value={nome}
-              onChange={(e) => setNome(e.target.value)}
+              onChange={e => setNome(e.target.value)}
               required
             />
           </label>
+
           <label className="modal__label">
             Descrição
             <textarea
               className="modal__textarea"
               value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
+              onChange={e => setDescricao(e.target.value)}
               required
             />
           </label>
+
           <label className="modal__label">
             Preço
             <input
               type="number"
+              step="0.01"
               className="modal__input"
               value={preco}
-              onChange={(e) => setPreco(Number(e.target.value))}
-              min={0}
+              onChange={e => setPreco(Number(e.target.value))}
+              required
+            />
+          </label>
+
+          <label className="modal__label">
+            Categoria
+            <select
+              className="modal__input"
+              value={categoria}
+              onChange={e => setCategoria(e.target.value)}
+              required
+            >
+              <option value="">Selecione...</option>
+              <option value="Acompanhante">Acompanhante</option>
+              <option value="Mensagens Eróticas">Mensagens Eróticas</option>
+              <option value="Vídeo Chamadas">Vídeo Chamadas</option>
+              <option value="Sexting">Sexting</option>
+            </select>
+          </label>
+
+          <label className="modal__label">
+            Local de Encontro
+            <input
+              className="modal__input"
+              value={lugarEncontro}
+              onChange={e => setLugarEncontro(e.target.value)}
               required
             />
           </label>
@@ -159,11 +197,9 @@ export default function EditAnuncioModal({
           <div className="modal__section">
             <div className="modal__section-title">Fotos Existentes</div>
             <div className="modal__attachments">
-              {existingFotos.map((url) => (
+              {existingFotos.map(url => (
                 <div key={url} className="attachment">
-                  <a href={url} target="_blank" rel="noopener noreferrer">
-                    <img src={url} alt="Foto" />
-                  </a>
+                  <img src={url} alt="Foto" />
                   <button
                     type="button"
                     className="remove-btn"
@@ -176,17 +212,15 @@ export default function EditAnuncioModal({
             </div>
           </div>
 
-          {/* Novas Fotos */}
+          {/* Adicionar Fotos */}
           <div className="modal__section">
             <div className="modal__section-title">Adicionar Fotos</div>
             <div className="modal__attachments">
-              {fotos.map((f, i) => {
-                const preview = URL.createObjectURL(f);
+              {fotos.map((file, i) => {
+                const preview = URL.createObjectURL(file);
                 return (
-                  <div key={i} className="attachment">
-                    <a href={preview} target="_blank" rel="noopener noreferrer">
-                      <img src={preview} alt="Nova foto" />
-                    </a>
+                  <div key={`${file.name}-${i}`} className="attachment">
+                    <img src={preview} alt="Nova foto" />
                     <button
                       type="button"
                       className="remove-btn"
@@ -197,9 +231,13 @@ export default function EditAnuncioModal({
                   </div>
                 );
               })}
-              <div className="attachment add" onClick={handleAddFoto}>
+              <button
+                type="button"
+                className="attachment add"
+                onClick={handleAddFoto}
+              >
                 +
-              </div>
+              </button>
             </div>
           </div>
 
@@ -207,11 +245,9 @@ export default function EditAnuncioModal({
           <div className="modal__section">
             <div className="modal__section-title">Vídeos Existentes</div>
             <div className="modal__attachments">
-              {existingVideos.map((url) => (
+              {existingVideos.map(url => (
                 <div key={url} className="attachment">
-                  <a href={url} target="_blank" rel="noopener noreferrer">
-                    <video src={url} />
-                  </a>
+                  <video src={url} controls />
                   <button
                     type="button"
                     className="remove-btn"
@@ -224,21 +260,15 @@ export default function EditAnuncioModal({
             </div>
           </div>
 
-          {/* Novos Vídeos */}
+          {/* Adicionar Vídeos */}
           <div className="modal__section">
             <div className="modal__section-title">Adicionar Vídeos</div>
             <div className="modal__attachments">
-              {videos.map((v, i) => {
-                const preview = URL.createObjectURL(v);
+              {videos.map((file, i) => {
+                const preview = URL.createObjectURL(file);
                 return (
-                  <div key={i} className="attachment">
-                    <a
-                      href={preview}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <video src={preview} />
-                    </a>
+                  <div key={`${file.name}-${i}`} className="attachment">
+                    <video src={preview} controls />
                     <button
                       type="button"
                       className="remove-btn"
@@ -249,9 +279,13 @@ export default function EditAnuncioModal({
                   </div>
                 );
               })}
-              <div className="attachment add" onClick={handleAddVideo}>
+              <button
+                type="button"
+                className="attachment add"
+                onClick={handleAddVideo}
+              >
                 +
-              </div>
+              </button>
             </div>
           </div>
 
@@ -259,6 +293,7 @@ export default function EditAnuncioModal({
             ref={fotoInputRef}
             type="file"
             accept="image/*"
+            multiple
             onChange={onFotoChange}
             style={{ display: "none" }}
           />
@@ -266,6 +301,7 @@ export default function EditAnuncioModal({
             ref={videoInputRef}
             type="file"
             accept="video/*"
+            multiple
             onChange={onVideoChange}
             style={{ display: "none" }}
           />

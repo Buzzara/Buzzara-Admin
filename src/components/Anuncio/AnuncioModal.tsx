@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import api from "../../services/api";
 import { AnuncioResponse } from "../../types/userAnuncio";
 import "./NewAnuncioModal.scss";
+import { Estado } from "../../types/useEstado";
 
 interface NewAnuncioModalProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   const [bairro, setBairro] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [estados, setEstados] = useState<Estado[]>([]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -57,6 +59,30 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
       );
     }
   }, []);
+
+useEffect(() => {
+  const fetchEstados = async () => {
+    try {
+      const url = import.meta.env.VITE_API_IBGE_ESTADOS;
+      console.log("🌐 URL da API:", url);
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      console.log("📦 Dados recebidos:", data);
+
+      const estadosOrdenados = data.sort((a: Estado, b: Estado) =>
+        a.nome.localeCompare(b.nome)
+      );
+      setEstados(estadosOrdenados);
+    } catch (err) {
+      console.error("❌ Erro ao buscar estados:", err);
+    }
+  };
+
+  fetchEstados();
+}, []);
+
 
   // refs para input hidden
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -83,108 +109,113 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
 
   const handleLoadMorePhotos = () => setPhotoSlots((prev) => prev + 4);
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-  try {
-    const form = new FormData();
-    form.append("servicoID", servicoID.toString());
-    form.append("nome", nome);
-    form.append("descricao", descricao);
-    form.append("preco", preco.toString());
-    form.append("categoria", categoria);
-    form.append("lugarEncontro", lugarEncontro);
-    if (idade !== "") form.append("idade", String(idade));
-    if (peso !== "") form.append("peso", String(peso));
-    if (altura !== "") form.append("altura", String(altura));
+    try {
+      const form = new FormData();
+      form.append("servicoID", servicoID.toString());
+      form.append("nome", nome);
+      form.append("descricao", descricao);
+      form.append("preco", preco.toString());
+      form.append("categoria", categoria);
+      form.append("lugarEncontro", lugarEncontro);
+      if (idade !== "") form.append("idade", String(idade));
+      if (peso !== "") form.append("peso", String(peso));
+      if (altura !== "") form.append("altura", String(altura));
 
-    form.append("dataCriacao", new Date().toISOString());
+      form.append("dataCriacao", new Date().toISOString());
 
-    // 🗓️ Disponibilidade formatada
-    function getWeekdayName(dateString: string) {
-      const days = [
-        "Domingo", "Segunda-feira", "Terça-feira",
-        "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"
-      ];
-      const date = new Date(dateString);
-      return days[date.getDay()];
-    }
-
-    let disponibilidade = "";
-    if (
-      disponibilidadeDataInicio &&
-      disponibilidadeDataFim &&
-      disponibilidadeHoraInicio &&
-      disponibilidadeHoraFim
-    ) {
-      const diaInicio = getWeekdayName(disponibilidadeDataInicio);
-      const diaFim = getWeekdayName(disponibilidadeDataFim);
-
-      disponibilidade = diaInicio === diaFim
-        ? `${diaInicio}, horário: ${disponibilidadeHoraInicio} às ${disponibilidadeHoraFim}`
-        : `${diaInicio} até ${diaFim}, horário: ${disponibilidadeHoraInicio} às ${disponibilidadeHoraFim}`;
-
-      form.append("disponibilidade", disponibilidade);
-      console.log("🕒 Disponibilidade formatada:", disponibilidade);
-    } else {
-      console.warn("⚠️ Dados de disponibilidade incompletos. Nada será enviado.");
-    }
-
-    // 📍 Localização — campos individuais, conforme o backend espera
-    form.append("endereco", endereco);
-    form.append("cidade", cidade);
-    form.append("estado", estado);
-    form.append("bairro", bairro);
-    if (latitude !== null) form.append("latitude", latitude.toString());
-    if (longitude !== null) form.append("longitude", longitude.toString());
-
-    // 📷 Mídia
-    fotos.forEach((file) => form.append("Fotos", file));
-    if (video) form.append("Video", video);
-
-    console.log("📤 Dados finais enviados:", {
-      servicoID,
-      nome,
-      descricao,
-      preco,
-      categoria,
-      lugarEncontro,
-      idade,
-      peso,
-      altura,
-      disponibilidade,
-      endereco,
-      cidade,
-      estado,
-      bairro,
-      latitude,
-      longitude,
-      fotosCount: fotos.length,
-      video: video ? "✔️" : "❌",
-    });
-
-    const { data: anuncio } = await api.post<AnuncioResponse>(
-      "/anuncios",
-      form,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
+      // 🗓️ Disponibilidade formatada
+      function getWeekdayName(dateString: string) {
+        const days = [
+          "Domingo",
+          "Segunda-feira",
+          "Terça-feira",
+          "Quarta-feira",
+          "Quinta-feira",
+          "Sexta-feira",
+          "Sábado",
+        ];
+        const date = new Date(dateString);
+        return days[date.getDay()];
       }
-    );
 
-    onSuccess(anuncio);
-    onClose();
-  } catch (err) {
-    console.error("❌ Erro ao criar anúncio:", err);
-    setError(err instanceof Error ? err.message : "Erro desconhecido");
-  } finally {
-    setLoading(false);
-  }
-};
+      let disponibilidade = "";
+      if (
+        disponibilidadeDataInicio &&
+        disponibilidadeDataFim &&
+        disponibilidadeHoraInicio &&
+        disponibilidadeHoraFim
+      ) {
+        const diaInicio = getWeekdayName(disponibilidadeDataInicio);
+        const diaFim = getWeekdayName(disponibilidadeDataFim);
 
+        disponibilidade =
+          diaInicio === diaFim
+            ? `${diaInicio}, horário: ${disponibilidadeHoraInicio} às ${disponibilidadeHoraFim}`
+            : `${diaInicio} até ${diaFim}, horário: ${disponibilidadeHoraInicio} às ${disponibilidadeHoraFim}`;
 
+        form.append("disponibilidade", disponibilidade);
+        console.log("🕒 Disponibilidade formatada:", disponibilidade);
+      } else {
+        console.warn(
+          "⚠️ Dados de disponibilidade incompletos. Nada será enviado."
+        );
+      }
 
+      // 📍 Localização — campos individuais, conforme o backend espera
+      form.append("endereco", endereco);
+      form.append("cidade", cidade);
+      form.append("estado", estado);
+      form.append("bairro", bairro);
+      if (latitude !== null) form.append("latitude", latitude.toString());
+      if (longitude !== null) form.append("longitude", longitude.toString());
+
+      // 📷 Mídia
+      fotos.forEach((file) => form.append("Fotos", file));
+      if (video) form.append("Video", video);
+
+      console.log("📤 Dados finais enviados:", {
+        servicoID,
+        nome,
+        descricao,
+        preco,
+        categoria,
+        lugarEncontro,
+        idade,
+        peso,
+        altura,
+        disponibilidade,
+        endereco,
+        cidade,
+        estado,
+        bairro,
+        latitude,
+        longitude,
+        fotosCount: fotos.length,
+        video: video ? "✔️" : "❌",
+      });
+
+      const { data: anuncio } = await api.post<AnuncioResponse>(
+        "/anuncios",
+        form,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      onSuccess(anuncio);
+      onClose();
+    } catch (err) {
+      console.error("❌ Erro ao criar anúncio:", err);
+      setError(err instanceof Error ? err.message : "Erro desconhecido");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="modal-overlay">
@@ -243,14 +274,21 @@ const handleSubmit = async (e: React.FormEvent) => {
             </label>
             <label className="modal__label">
               Estado
-              <input
-                type="text"
+              <select
                 className="modal__input"
                 value={estado}
                 onChange={(e) => setEstado(e.target.value)}
                 required
-              />
+              >
+                <option value="">Selecione o estado</option>
+                {estados.map((estado) => (
+                  <option key={estado.id} value={estado.sigla}>
+                    {estado.nome}
+                  </option>
+                ))}
+              </select>
             </label>
+
             <label className="modal__label">
               Bairro
               <input

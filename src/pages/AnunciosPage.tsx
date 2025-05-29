@@ -1,16 +1,11 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
-import {
-  Edit,
-  Trash2,
-  PlusCircle,
-  Search,
-  ChevronDown,
-} from "lucide-react";
+import { Edit, Trash2, PlusCircle, Search, ChevronDown } from "lucide-react";
 
 import NewAnuncioModal from "../components/Anuncio/AnuncioModal";
 import EditAnuncioModal from "../components/EditAnuncioModal/EditAnuncioModal";
 
 import { userGetAnuncios } from "../services/anuncio/userBuscaAnuncio";
+import { deleteAnuncio } from "../services/anuncio/deleteAnuncio";
 
 import type { userGetAnuncioResponse } from "../types/userBuscaAnuncio";
 import type { AnuncioResponse } from "../types/userAnuncio";
@@ -21,11 +16,15 @@ interface Anuncio {
   id: string;
   title: string;
   imageUrl: string;
+  descricao: string;
+  preco: number;
   status: "Ativo" | "Pausado" | "Expirado";
   rawDate: string;
   createdAt: string;
   fotos: { fotoAnuncioID: number; url: string }[];
   videos: { videoAnuncioID: number; url: string }[];
+  categoria: string;
+  lugarEncontro: string;
 }
 
 function getMediaUrl(path: string) {
@@ -44,7 +43,6 @@ type FilterOption = (typeof FILTER_OPTIONS)[number];
 
 const AnunciosPage: React.FC = () => {
   const [meuServicoId, setMeuServicoId] = useState<number | null>(null);
-
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterOption>("Todos");
@@ -63,7 +61,11 @@ const AnunciosPage: React.FC = () => {
         const list: Anuncio[] = data.map((item) => ({
           id: String(item.servicoID),
           title: item.nome,
+          descricao: item.descricao,
           rawDate: item.dataCriacao,
+          preco: item.preco,
+          categoria: item.categoria, // ← aqui
+          lugarEncontro: item.lugarEncontro, // ← e aqui
           imageUrl: item.fotos?.[0]?.url ?? "",
           status: "Ativo",
           createdAt: new Date(item.dataCriacao).toLocaleDateString(),
@@ -93,8 +95,12 @@ const AnunciosPage: React.FC = () => {
       id: String(item.id),
       title: item.nome,
       rawDate: item.dataCriacao,
+      descricao: item.descricao,
+      preco: item.preco,
       imageUrl: item.fotos[0] ?? "",
       status: "Ativo",
+      categoria: item.categoria, // ← aqui
+      lugarEncontro: item.lugarEncontro, // ← e aqui
       createdAt: new Date(item.dataCriacao).toLocaleDateString(),
       fotos: item.fotos.map((url, idx) => ({ fotoAnuncioID: idx, url })),
       videos: item.video ? [{ videoAnuncioID: 0, url: item.video }] : [],
@@ -104,10 +110,17 @@ const AnunciosPage: React.FC = () => {
   }
 
   function handleEditSuccess(updated: Anuncio) {
-    setAnuncios((prev) =>
-      prev.map((a) => (a.id === updated.id ? updated : a))
-    );
+    setAnuncios((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
     setEditing(null);
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteAnuncio(Number(id));
+      setAnuncios((prev) => prev.filter((a) => a.id !== id));
+    } catch (err) {
+      console.error("Erro ao deletar anúncio:", err);
+    }
   }
 
   return (
@@ -173,7 +186,7 @@ const AnunciosPage: React.FC = () => {
                   <button title="Editar" onClick={() => setEditing(a)}>
                     <Edit size={16} color="#ffe500" />
                   </button>
-                  <button title="Excluir">
+                  <button title="Excluir" onClick={() => handleDelete(a.id)}>
                     <Trash2 size={16} color="#e53935" />
                   </button>
                 </div>
@@ -208,8 +221,10 @@ const AnunciosPage: React.FC = () => {
             id: Number(editing.id),
             servicoID: Number(editing.id),
             nome: editing.title,
-            descricao: "",
-            preco: 0,
+            descricao: editing.descricao,
+            preco: editing.preco,
+            categoria: editing.categoria,
+            lugarEncontro: editing.lugarEncontro,
             fotos: editing.fotos.map((f) => f.url),
             video: editing.videos[0]?.url ?? "",
             dataCriacao: editing.rawDate,
@@ -219,14 +234,16 @@ const AnunciosPage: React.FC = () => {
             const updated: Anuncio = {
               id: String(upd.id),
               title: upd.nome,
+              descricao: upd.descricao,
               rawDate: upd.dataCriacao,
+              categoria: upd.categoria,
+              lugarEncontro: upd.lugarEncontro,
+              preco: upd.preco,
               imageUrl: upd.fotos[0] ?? "",
               status: "Ativo",
               createdAt: new Date(upd.dataCriacao).toLocaleDateString(),
               fotos: upd.fotos.map((url, idx) => ({ fotoAnuncioID: idx, url })),
-              videos: upd.video
-                ? [{ videoAnuncioID: 0, url: upd.video }]
-                : [],
+              videos: upd.video ? [{ videoAnuncioID: 0, url: upd.video }] : [],
             };
             handleEditSuccess(updated);
           }}
