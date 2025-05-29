@@ -8,11 +8,12 @@ import EditAnuncioModal from "../components/EditAnuncioModal/EditAnuncioModal";
 import { userGetAnuncios } from "../services/anuncio/userBuscaAnuncio";
 import { deleteAnuncio } from "../services/anuncio/deleteAnuncio";
 
-import type { AnuncioResponse, FotoAnuncioDTO, VideoAnuncioDTO } from "../types/userAnuncio";
+import type { AnuncioResponse } from "../types/userAnuncio";
 import type { AnuncioEditResponse } from "../types/useEditarAnuncio";
 
 import "../styles/anunciosPage.scss";
 
+// Interface interna usada apenas neste componente
 interface Anuncio {
   id: string;
   title: string;
@@ -59,9 +60,10 @@ const AnunciosPage: React.FC = () => {
           setMeuServicoId(data[0].servicoID);
         }
 
-        const list: Anuncio[] = data.map(item => {
-          const fotosDTO: FotoAnuncioDTO[] = item.fotos ?? [];
-          const videosDTO: VideoAnuncioDTO[] = item.videos ?? [];
+        const list: Anuncio[] = data.map((item) => {
+          // item.fotos e item.videos são arrays de DTOs
+          const fotosDto = item.fotos ?? [];
+          const videosDto = item.videos ?? [];
 
           return {
             id: String(item.servicoID),
@@ -71,11 +73,17 @@ const AnunciosPage: React.FC = () => {
             preco: item.preco,
             categoria: item.categoria,
             lugarEncontro: item.lugarEncontro,
-            imageUrl: fotosDTO[0]?.url ?? "",
+            imageUrl: fotosDto[0]?.url ?? "",
             status: "Ativo",
             createdAt: new Date(item.dataCriacao).toLocaleDateString(),
-            fotos: fotosDTO.map(f => ({ fotoAnuncioID: f.fotoAnuncioID, url: f.url })),
-            videos: videosDTO.map(v => ({ videoAnuncioID: v.videoAnuncioID, url: v.url })),
+            fotos: fotosDto.map((f) => ({
+              fotoAnuncioID: f.fotoAnuncioID,
+              url: f.url,
+            })),
+            videos: videosDto.map((v) => ({
+              videoAnuncioID: v.videoAnuncioID,
+              url: v.url,
+            })),
           };
         });
 
@@ -87,7 +95,7 @@ const AnunciosPage: React.FC = () => {
   }, []);
 
   const filtered = anuncios.filter(
-    a =>
+    (a) =>
       a.title.toLowerCase().includes(search.toLowerCase()) &&
       (filter === "Todos" || a.status === filter)
   );
@@ -99,8 +107,8 @@ const AnunciosPage: React.FC = () => {
 
   // ao criar novo anúncio
   function handleCreateSuccess(item: AnuncioResponse) {
-    const fotosDTO: FotoAnuncioDTO[] = item.fotos ?? [];
-    const videosDTO: VideoAnuncioDTO[] = item.videos ?? [];
+    const fotosDto = item.fotos ?? [];
+    const videosDto = item.videos ?? [];
 
     const novo: Anuncio = {
       id: String(item.servicoID),
@@ -110,19 +118,22 @@ const AnunciosPage: React.FC = () => {
       preco: item.preco,
       categoria: item.categoria,
       lugarEncontro: item.lugarEncontro,
-      imageUrl: fotosDTO[0]?.url ?? "",
+      imageUrl: fotosDto[0]?.url ?? "",
       status: "Ativo",
       createdAt: new Date(item.dataCriacao).toLocaleDateString(),
-      fotos: fotosDTO.map(f => ({ fotoAnuncioID: f.fotoAnuncioID, url: f.url })),
-      videos: videosDTO.map(v => ({ videoAnuncioID: v.videoAnuncioID, url: v.url })),
+      fotos: fotosDto.map((f) => ({ fotoAnuncioID: f.fotoAnuncioID, url: f.url })),
+      videos: videosDto.map((v) => ({
+        videoAnuncioID: v.videoAnuncioID,
+        url: v.url,
+      })),
     };
-    setAnuncios(prev => [novo, ...prev]);
+    setAnuncios((prev) => [novo, ...prev]);
     setIsNewOpen(false);
   }
 
   // ao editar anúncio
   function handleEditSuccess(updated: Anuncio) {
-    setAnuncios(prev => prev.map(a => (a.id === updated.id ? updated : a)));
+    setAnuncios((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
     setEditing(null);
   }
 
@@ -130,7 +141,7 @@ const AnunciosPage: React.FC = () => {
   async function handleDelete(id: string) {
     try {
       await deleteAnuncio(Number(id));
-      setAnuncios(prev => prev.filter(a => a.id !== id));
+      setAnuncios((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
       console.error("Erro ao deletar anúncio:", err);
     }
@@ -157,7 +168,7 @@ const AnunciosPage: React.FC = () => {
         </div>
         <div className="select-wrapper">
           <select value={filter} onChange={handleFilterChange}>
-            {FILTER_OPTIONS.map(opt => (
+            {FILTER_OPTIONS.map((opt) => (
               <option key={opt} value={opt}>
                 {opt}
               </option>
@@ -168,7 +179,7 @@ const AnunciosPage: React.FC = () => {
       </div>
 
       <div className="anuncios-page__grid">
-        {filtered.map(a => {
+        {filtered.map((a) => {
           const hasVideo = a.videos.length > 0;
           const mediaUrl = hasVideo ? a.videos[0].url : a.imageUrl;
           return (
@@ -243,9 +254,8 @@ const AnunciosPage: React.FC = () => {
             disponibilidadeHoraInicio: "",
             disponibilidadeHoraFim: "",
             disponibilidade: "",
-            // camelCase conforme interface
-            novasFotos: editing.fotos.map(f => f.url),
-            novosVideos: editing.videos.map(v => v.url),
+            novasFotos: editing.fotos.map((f) => f.url),
+            novosVideos: editing.videos.map((v) => v.url),
             dataCriacao: editing.rawDate,
           }}
           onClose={() => setEditing(null)}

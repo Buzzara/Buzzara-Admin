@@ -1,3 +1,5 @@
+// src/types/useEditarAnuncio.ts
+
 // Tipagem dos arquivos de mídia e localização
 export interface FotoAnuncioDTO {
   fotoAnuncioID: number;
@@ -42,20 +44,17 @@ export interface AnuncioEditResponse {
   preco: number;
   categoria: string;
   lugarEncontro: string;
+  
+  // dados de disponibilidade detalhada para pré-preencher o modal
   disponibilidade: string;
-  idade: number;
-  peso: number;
-  altura: number;
-  dataCriacao: string;           // ISO datetime
-  localizacao: LocalizacaoDTO | null;
-  fotos: FotoAnuncioDTO[];
-  videos: VideoAnuncioDTO[];
-}
+  disponibilidadeDataInicio: string;
+  disponibilidadeDataFim: string;
+  disponibilidadeHoraInicio: string;
+  disponibilidadeHoraFim: string;
 
+  // URLs das novas mídias retornadas após o update
+  novasFotos?: string[];
+  novosVideos?: string[];
 
-export interface DisponibilidadeDetalhada {
-  disponibilidadeDataInicio?: string;
-  disponibilidadeDataFim?: string;
-  disponibilidadeHoraInicio?: string;
-  disponibilidadeHoraFim?: string;
+  dataCriacao: string; // ISO datetime
 }
