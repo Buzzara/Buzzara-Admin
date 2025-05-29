@@ -1,6 +1,6 @@
 // src/components/EditAnuncioModal/EditAnuncioModal.tsx
 import React, { useState, useEffect, ChangeEvent } from "react";
-import type { AnuncioEditResponse, DisponibilidadeDetalhada, AnuncioEditParams } from "../../types/useEditarAnuncio";
+import type { AnuncioEditResponse, AnuncioEditParams } from "../../types/useEditarAnuncio";
 import { updateAnuncio } from "../../services/anuncio/editarAnuncio";
 import "./EditAnuncioModal.scss";
 
@@ -17,13 +17,12 @@ const weekdayNames = [
 function getWeekdayName(dateString: string): string {
   if (!dateString) return "";
   const [Y, M, D] = dateString.split("-").map(Number);
-  const d = new Date(Y, M - 1, D);
-  return weekdayNames[d.getDay()] || "";
+  return weekdayNames[new Date(Y, M - 1, D).getDay()] || "";
 }
 
 interface EditAnuncioModalProps {
   isOpen: boolean;
-  anuncio: AnuncioEditResponse & DisponibilidadeDetalhada;
+  anuncio: AnuncioEditResponse;    // só esse tipo, sem DisponibilidadeDetalhada
   onClose: () => void;
   onSuccess: (atualizado: AnuncioEditResponse) => void;
 }
@@ -46,26 +45,30 @@ export default function EditAnuncioModal({
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFim, setHoraFim] = useState("");
 
-  // novas mídias
+  // só novas mídias
   const [fotos, setFotos] = useState<File[]>([]);
   const [videos, setVideos] = useState<File[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // quando abrir o modal, carrega só os campos de texto e limpa datas e mídias
   useEffect(() => {
     if (!isOpen) return;
+
     setNome(anuncio.nome);
     setDescricao(anuncio.descricao);
     setPreco(anuncio.preco);
     setCategoria(anuncio.categoria);
     setLugarEncontro(anuncio.lugarEncontro);
 
-    setDataInicio(anuncio.disponibilidadeDataInicio ?? "");
-    setDataFim(anuncio.disponibilidadeDataFim ?? "");
-    setHoraInicio(anuncio.disponibilidadeHoraInicio ?? "");
-    setHoraFim(anuncio.disponibilidadeHoraFim ?? "");
+    // limpa datas/hora para forçar o usuário a selecionar
+    setDataInicio("");
+    setDataFim("");
+    setHoraInicio("");
+    setHoraFim("");
 
+    // limpa galerias antigas—apenas novas serão enviadas
     setFotos([]);
     setVideos([]);
     setError(null);
@@ -73,8 +76,8 @@ export default function EditAnuncioModal({
 
   const onFotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    const novos = Array.from(e.target.files);
-    setFotos(prev => [...prev, ...novos]);
+    // sobrescreve tudo que vier antes
+    setFotos(Array.from(e.target.files));
     e.target.value = "";
   };
 
@@ -90,9 +93,10 @@ export default function EditAnuncioModal({
     setError(null);
 
     try {
-      const diaInicio = getWeekdayName(dataInicio);
-      const diaFim = getWeekdayName(dataFim);
-      const disponibilidade = `${diaInicio} até ${diaFim}, horário: ${horaInicio} às ${horaFim}`;
+      // monta string única de disponibilidade
+      const diaIn = getWeekdayName(dataInicio);
+      const diaFm = getWeekdayName(dataFim);
+      const disponibilidade = `${diaIn} até ${diaFm}, horário: ${horaInicio} às ${horaFim}`;
 
       const params: AnuncioEditParams = {
         nome,
@@ -102,6 +106,7 @@ export default function EditAnuncioModal({
         lugarEncontro,
         disponibilidade,
       };
+      // sempre limpa antigas no back, só envia as que escolheu agora
       if (fotos.length) params.novasFotos = fotos;
       if (videos.length) params.novoVideo = videos[0];
 
@@ -110,7 +115,7 @@ export default function EditAnuncioModal({
       onClose();
     } catch (err: any) {
       console.error("Erro ao editar anúncio:", err);
-      setError("Falha ao atualizar anúncio. Tente novamente.");
+      setError("Não foi possível salvar. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -232,14 +237,14 @@ export default function EditAnuncioModal({
             </div>
           </div>
 
-          {/* Fotos */}
+          {/* Adicionar Fotos — sempre limpa o anterior */}
           <div className="modal__section">
             <div className="modal__section-title">Adicionar Fotos</div>
             <div className="modal__attachments">
               {fotos.map((file, idx) => {
                 const preview = URL.createObjectURL(file);
                 return (
-                  <div key={`${file.name}-${idx}`} className="attachment">
+                  <div key={idx} className="attachment">
                     <img src={preview} alt="Nova foto" />
                     <button
                       type="button"
@@ -264,14 +269,14 @@ export default function EditAnuncioModal({
             </div>
           </div>
 
-          {/* Vídeo */}
+          {/* Adicionar Vídeo */}
           <div className="modal__section">
             <div className="modal__section-title">Adicionar Vídeo</div>
             <div className="modal__attachments">
               {videos.map((file, idx) => {
                 const preview = URL.createObjectURL(file);
                 return (
-                  <div key={`${file.name}-${idx}`} className="attachment">
+                  <div key={idx} className="attachment">
                     <video src={preview} controls />
                     <button
                       type="button"

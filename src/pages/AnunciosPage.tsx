@@ -8,9 +8,8 @@ import EditAnuncioModal from "../components/EditAnuncioModal/EditAnuncioModal";
 import { userGetAnuncios } from "../services/anuncio/userBuscaAnuncio";
 import { deleteAnuncio } from "../services/anuncio/deleteAnuncio";
 
-import type { AnuncioResponse } from "../types/userAnuncio";
+import type { AnuncioResponse, FotoAnuncioDTO, VideoAnuncioDTO } from "../types/userAnuncio";
 import type { AnuncioEditResponse } from "../types/useEditarAnuncio";
-
 
 import "../styles/anunciosPage.scss";
 
@@ -29,7 +28,7 @@ interface Anuncio {
   lugarEncontro: string;
 }
 
-function getMediaUrl(path: string) {
+function getMediaUrl(path: string): string {
   if (!path) return "";
   if (path.startsWith("http")) return path;
   const clean = path.startsWith("/") ? path : `/${path}`;
@@ -51,29 +50,35 @@ const AnunciosPage: React.FC = () => {
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [editing, setEditing] = useState<Anuncio | null>(null);
 
+  // carrega anúncios
   useEffect(() => {
     (async () => {
       try {
-        const data = await userGetAnuncios(); // userGetAnuncioResponse[]
-
+        const data = await userGetAnuncios();
         if (data.length > 0) {
           setMeuServicoId(data[0].servicoID);
         }
 
-        const list = data.map<Anuncio>((item) => ({
-          id: String(item.servicoID),
-          title: item.nome,
-          descricao: item.descricao,
-          rawDate: item.dataCriacao,
-          preco: item.preco,
-          categoria: item.categoria,
-          lugarEncontro: item.lugarEncontro,
-          imageUrl: item.fotos?.[0]?.url ?? "",
-          status: "Ativo",
-          createdAt: new Date(item.dataCriacao).toLocaleDateString(),
-          fotos: item.fotos || [],
-          videos: item.videos || [],
-        }));
+        const list: Anuncio[] = data.map(item => {
+          const fotosDTO: FotoAnuncioDTO[] = item.fotos ?? [];
+          const videosDTO: VideoAnuncioDTO[] = item.videos ?? [];
+
+          return {
+            id: String(item.servicoID),
+            title: item.nome,
+            descricao: item.descricao,
+            rawDate: item.dataCriacao,
+            preco: item.preco,
+            categoria: item.categoria,
+            lugarEncontro: item.lugarEncontro,
+            imageUrl: fotosDTO[0]?.url ?? "",
+            status: "Ativo",
+            createdAt: new Date(item.dataCriacao).toLocaleDateString(),
+            fotos: fotosDTO.map(f => ({ fotoAnuncioID: f.fotoAnuncioID, url: f.url })),
+            videos: videosDTO.map(v => ({ videoAnuncioID: v.videoAnuncioID, url: v.url })),
+          };
+        });
+
         setAnuncios(list);
       } catch (err) {
         console.error("Erro ao buscar anúncios:", err);
@@ -82,7 +87,7 @@ const AnunciosPage: React.FC = () => {
   }, []);
 
   const filtered = anuncios.filter(
-    (a) =>
+    a =>
       a.title.toLowerCase().includes(search.toLowerCase()) &&
       (filter === "Todos" || a.status === filter)
   );
@@ -92,41 +97,40 @@ const AnunciosPage: React.FC = () => {
   const handleFilterChange = (e: ChangeEvent<HTMLSelectElement>) =>
     setFilter(e.target.value as FilterOption);
 
+  // ao criar novo anúncio
   function handleCreateSuccess(item: AnuncioResponse) {
-    const fotosArr = Array.isArray(item.fotos) ? item.fotos : [];
-    const videosArr = Array.isArray(item.video)
-      ? item.fotos
-      : item.video
-      ? [item.video]
-      : [];
+    const fotosDTO: FotoAnuncioDTO[] = item.fotos ?? [];
+    const videosDTO: VideoAnuncioDTO[] = item.videos ?? [];
 
     const novo: Anuncio = {
-      id: String(item.id),
+      id: String(item.servicoID),
       title: item.nome,
       descricao: item.descricao,
       rawDate: item.dataCriacao,
       preco: item.preco,
       categoria: item.categoria,
       lugarEncontro: item.lugarEncontro,
-      imageUrl: fotosArr[0] ?? "",
+      imageUrl: fotosDTO[0]?.url ?? "",
       status: "Ativo",
       createdAt: new Date(item.dataCriacao).toLocaleDateString(),
-      fotos: fotosArr.map((url, idx) => ({ fotoAnuncioID: idx, url })),
-      videos: videosArr.map((url, idx) => ({ videoAnuncioID: idx, url })),
+      fotos: fotosDTO.map(f => ({ fotoAnuncioID: f.fotoAnuncioID, url: f.url })),
+      videos: videosDTO.map(v => ({ videoAnuncioID: v.videoAnuncioID, url: v.url })),
     };
-    setAnuncios((prev) => [novo, ...prev]);
+    setAnuncios(prev => [novo, ...prev]);
     setIsNewOpen(false);
   }
 
+  // ao editar anúncio
   function handleEditSuccess(updated: Anuncio) {
-    setAnuncios((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    setAnuncios(prev => prev.map(a => (a.id === updated.id ? updated : a)));
     setEditing(null);
   }
 
+  // excluir anúncio
   async function handleDelete(id: string) {
     try {
       await deleteAnuncio(Number(id));
-      setAnuncios((prev) => prev.filter((a) => a.id !== id));
+      setAnuncios(prev => prev.filter(a => a.id !== id));
     } catch (err) {
       console.error("Erro ao deletar anúncio:", err);
     }
@@ -153,7 +157,7 @@ const AnunciosPage: React.FC = () => {
         </div>
         <div className="select-wrapper">
           <select value={filter} onChange={handleFilterChange}>
-            {FILTER_OPTIONS.map((opt) => (
+            {FILTER_OPTIONS.map(opt => (
               <option key={opt} value={opt}>
                 {opt}
               </option>
@@ -164,7 +168,7 @@ const AnunciosPage: React.FC = () => {
       </div>
 
       <div className="anuncios-page__grid">
-        {filtered.map((a) => {
+        {filtered.map(a => {
           const hasVideo = a.videos.length > 0;
           const mediaUrl = hasVideo ? a.videos[0].url : a.imageUrl;
           return (
@@ -174,7 +178,7 @@ const AnunciosPage: React.FC = () => {
                   <video
                     controls
                     src={getMediaUrl(mediaUrl)}
-                    poster={a.imageUrl ? getMediaUrl(a.imageUrl) : undefined}
+                    poster={getMediaUrl(a.imageUrl)}
                     className="card__img"
                   />
                 ) : (
@@ -206,12 +210,14 @@ const AnunciosPage: React.FC = () => {
         {filtered.length === 0 && <p className="empty">Nenhum anúncio encontrado.</p>}
       </div>
 
+      {/* Paginação stub */}
       <div className="anuncios-page__pagination">
         <button disabled>Anterior</button>
         <span>1 de 1</span>
         <button disabled>Próximo</button>
       </div>
 
+      {/* Novo anúncio */}
       {isNewOpen && meuServicoId !== null && (
         <NewAnuncioModal
           isOpen
@@ -221,11 +227,11 @@ const AnunciosPage: React.FC = () => {
         />
       )}
 
+      {/* Editar anúncio */}
       {editing && (
         <EditAnuncioModal
           isOpen
           anuncio={{
-            id: Number(editing.id),
             servicoID: Number(editing.id),
             nome: editing.title,
             descricao: editing.descricao,
@@ -236,21 +242,19 @@ const AnunciosPage: React.FC = () => {
             disponibilidadeDataFim: "",
             disponibilidadeHoraInicio: "",
             disponibilidadeHoraFim: "",
-            NovasFotos: editing.fotos.map((f) => f.url),
-            NovosVideos: editing.videos.map((v) => v.url),
+            disponibilidade: "",
+            // camelCase conforme interface
+            novasFotos: editing.fotos.map(f => f.url),
+            novosVideos: editing.videos.map(v => v.url),
             dataCriacao: editing.rawDate,
           }}
           onClose={() => setEditing(null)}
           onSuccess={(upd: AnuncioEditResponse) => {
-            const fotosArr = Array.isArray(upd.NovasFotos) ? upd.NovasFotos : [];
-            const videosArr = Array.isArray(upd.NovosVideos)
-              ? upd.NovasFotos
-              : upd.NovosVideos
-              ? [upd.NovosVideos]
-              : [];
+            const fotosArr = upd.novasFotos ?? [];
+            const videosArr = upd.novosVideos ?? [];
 
             const updated: Anuncio = {
-              id: String(upd.id),
+              id: String(upd.servicoID),
               title: upd.nome,
               descricao: upd.descricao,
               rawDate: upd.dataCriacao,
