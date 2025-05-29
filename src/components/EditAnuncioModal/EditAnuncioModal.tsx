@@ -1,14 +1,31 @@
 // src/components/EditAnuncioModal/EditAnuncioModal.tsx
-import React, { useState, useEffect, useRef } from "react";
-import api from "../../services/api";
-import { AnuncioResponse } from "../../types/userAnuncio";
+import React, { useState, useEffect, ChangeEvent } from "react";
+import type { AnuncioEditResponse, DisponibilidadeDetalhada, AnuncioEditParams } from "../../types/useEditarAnuncio";
+import { updateAnuncio } from "../../services/anuncio/editarAnuncio";
 import "./EditAnuncioModal.scss";
+
+// helper para nome do dia em português
+const weekdayNames = [
+  "Domingo",
+  "Segunda-feira",
+  "Terça-feira",
+  "Quarta-feira",
+  "Quinta-feira",
+  "Sexta-feira",
+  "Sábado",
+];
+function getWeekdayName(dateString: string): string {
+  if (!dateString) return "";
+  const [Y, M, D] = dateString.split("-").map(Number);
+  const d = new Date(Y, M - 1, D);
+  return weekdayNames[d.getDay()] || "";
+}
 
 interface EditAnuncioModalProps {
   isOpen: boolean;
-  anuncio: AnuncioResponse;
+  anuncio: AnuncioEditResponse & DisponibilidadeDetalhada;
   onClose: () => void;
-  onSuccess: (atualizado: AnuncioResponse) => void;
+  onSuccess: (atualizado: AnuncioEditResponse) => void;
 }
 
 export default function EditAnuncioModal({
@@ -22,17 +39,20 @@ export default function EditAnuncioModal({
   const [preco, setPreco] = useState<number>(0);
   const [categoria, setCategoria] = useState("");
   const [lugarEncontro, setLugarEncontro] = useState("");
+
+  // disponibilidade em inputs separados
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
+  const [horaInicio, setHoraInicio] = useState("");
+  const [horaFim, setHoraFim] = useState("");
+
+  // novas mídias
   const [fotos, setFotos] = useState<File[]>([]);
   const [videos, setVideos] = useState<File[]>([]);
-  const [existingFotos, setExistingFotos] = useState<string[]>([]);
-  const [existingVideos, setExistingVideos] = useState<string[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fotoInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
-
-  // Quando o modal abre ou o anúncio muda, popula os estados
   useEffect(() => {
     if (!isOpen) return;
     setNome(anuncio.nome);
@@ -40,50 +60,29 @@ export default function EditAnuncioModal({
     setPreco(anuncio.preco);
     setCategoria(anuncio.categoria);
     setLugarEncontro(anuncio.lugarEncontro);
-    setExistingFotos(anuncio.fotos);
-    setExistingVideos(anuncio.video ? [anuncio.video] : []);
+
+    setDataInicio(anuncio.disponibilidadeDataInicio ?? "");
+    setDataFim(anuncio.disponibilidadeDataFim ?? "");
+    setHoraInicio(anuncio.disponibilidadeHoraInicio ?? "");
+    setHoraFim(anuncio.disponibilidadeHoraFim ?? "");
+
     setFotos([]);
     setVideos([]);
     setError(null);
   }, [isOpen, anuncio]);
 
-  const handleAddFoto = () => fotoInputRef.current?.click();
-  const handleAddVideo = () => videoInputRef.current?.click();
-
-  // Converte FileList em File[] sem erro de tipagem
-  const onFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    const arr: File[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const f = files.item(i);
-      if (f) arr.push(f);
-    }
-    setFotos(prev => [...prev, ...arr]);
+  const onFotoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const novos = Array.from(e.target.files);
+    setFotos(prev => [...prev, ...novos]);
     e.target.value = "";
   };
 
-  const onVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    const arr: File[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const v = files.item(i);
-      if (v) arr.push(v);
-    }
-    setVideos(prev => [...prev, ...arr]);
+  const onVideoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    setVideos([e.target.files[0]]);
     e.target.value = "";
   };
-
-  const removeExistingFoto = (url: string) =>
-    setExistingFotos(prev => prev.filter(u => u !== url));
-  const removeNewFoto = (idx: number) =>
-    setFotos(prev => prev.filter((_, i) => i !== idx));
-
-  const removeExistingVideo = (url: string) =>
-    setExistingVideos(prev => prev.filter(u => u !== url));
-  const removeNewVideo = (idx: number) =>
-    setVideos(prev => prev.filter((_, i) => i !== idx));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,33 +90,27 @@ export default function EditAnuncioModal({
     setError(null);
 
     try {
-      const form = new FormData();
-      form.append("nome", nome);
-      form.append("descricao", descricao);
-      form.append("preco", preco.toString());
-      form.append("Categoria", categoria);
-      form.append("LugarEncontro", lugarEncontro);
+      const diaInicio = getWeekdayName(dataInicio);
+      const diaFim = getWeekdayName(dataFim);
+      const disponibilidade = `${diaInicio} até ${diaFim}, horário: ${horaInicio} às ${horaFim}`;
 
-      existingFotos.forEach(url => form.append("existingFotos", url));
-      fotos.forEach(file => form.append("newFotos", file));
+      const params: AnuncioEditParams = {
+        nome,
+        descricao,
+        preco,
+        categoria,
+        lugarEncontro,
+        disponibilidade,
+      };
+      if (fotos.length) params.novasFotos = fotos;
+      if (videos.length) params.novoVideo = videos[0];
 
-      existingVideos.forEach(url => form.append("existingVideos", url));
-      videos.forEach(file => form.append("newVideos", file));
-
-      const { data } = await api.put<AnuncioResponse>(
-        `/anuncios/${anuncio.id}`,
-        form,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-
-      onSuccess(data);
+      const updated = await updateAnuncio(anuncio.servicoID, params);
+      onSuccess(updated);
       onClose();
     } catch (err: any) {
-      console.error("Erro ao editar anúncio:", err.response?.data || err);
-      const msg = err.response?.data?.errors
-        ? Object.values(err.response.data.errors).flat().join(" | ")
-        : err.response?.data?.message || "Erro inesperado";
-      setError(msg);
+      console.error("Erro ao editar anúncio:", err);
+      setError("Falha ao atualizar anúncio. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -128,13 +121,12 @@ export default function EditAnuncioModal({
   return (
     <div className="modal-overlay">
       <div className="modal edit-modal">
-        <button className="modal__close" onClick={onClose}>
-          &times;
-        </button>
+        <button className="modal__close" onClick={onClose}>&times;</button>
         <h2 className="modal__title">Editar Anúncio</h2>
         {error && <div className="modal__error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="modal__form">
+          {/* Campos básicos */}
           <label className="modal__label">
             Nome
             <input
@@ -193,124 +185,117 @@ export default function EditAnuncioModal({
             />
           </label>
 
-          {/* Fotos Existentes */}
+          {/* Disponibilidade */}
           <div className="modal__section">
-            <div className="modal__section-title">Fotos Existentes</div>
-            <div className="modal__attachments">
-              {existingFotos.map(url => (
-                <div key={url} className="attachment">
-                  <img src={url} alt="Foto" />
-                  <button
-                    type="button"
-                    className="remove-btn"
-                    onClick={() => removeExistingFoto(url)}
-                  >
-                    &times;
-                  </button>
-                </div>
-              ))}
+            <div className="modal__section-title">Disponibilidade</div>
+            <div className="modal__availability-grid">
+              <label className="modal__label">
+                Data Início
+                <input
+                  type="date"
+                  className="modal__input"
+                  value={dataInicio}
+                  onChange={e => setDataInicio(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="modal__label">
+                Data Fim
+                <input
+                  type="date"
+                  className="modal__input"
+                  value={dataFim}
+                  onChange={e => setDataFim(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="modal__label">
+                Hora Início
+                <input
+                  type="time"
+                  className="modal__input"
+                  value={horaInicio}
+                  onChange={e => setHoraInicio(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="modal__label">
+                Hora Fim
+                <input
+                  type="time"
+                  className="modal__input"
+                  value={horaFim}
+                  onChange={e => setHoraFim(e.target.value)}
+                  required
+                />
+              </label>
             </div>
           </div>
 
-          {/* Adicionar Fotos */}
+          {/* Fotos */}
           <div className="modal__section">
             <div className="modal__section-title">Adicionar Fotos</div>
             <div className="modal__attachments">
-              {fotos.map((file, i) => {
+              {fotos.map((file, idx) => {
                 const preview = URL.createObjectURL(file);
                 return (
-                  <div key={`${file.name}-${i}`} className="attachment">
+                  <div key={`${file.name}-${idx}`} className="attachment">
                     <img src={preview} alt="Nova foto" />
                     <button
                       type="button"
                       className="remove-btn"
-                      onClick={() => removeNewFoto(i)}
+                      onClick={() => setFotos(prev => prev.filter((_, i) => i !== idx))}
                     >
                       &times;
                     </button>
                   </div>
                 );
               })}
-              <button
-                type="button"
-                className="attachment add"
-                onClick={handleAddFoto}
-              >
+              <label className="attachment add">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={onFotoChange}
+                  style={{ display: "none" }}
+                />
                 +
-              </button>
+              </label>
             </div>
           </div>
 
-          {/* Vídeos Existentes */}
+          {/* Vídeo */}
           <div className="modal__section">
-            <div className="modal__section-title">Vídeos Existentes</div>
+            <div className="modal__section-title">Adicionar Vídeo</div>
             <div className="modal__attachments">
-              {existingVideos.map(url => (
-                <div key={url} className="attachment">
-                  <video src={url} controls />
-                  <button
-                    type="button"
-                    className="remove-btn"
-                    onClick={() => removeExistingVideo(url)}
-                  >
-                    &times;
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Adicionar Vídeos */}
-          <div className="modal__section">
-            <div className="modal__section-title">Adicionar Vídeos</div>
-            <div className="modal__attachments">
-              {videos.map((file, i) => {
+              {videos.map((file, idx) => {
                 const preview = URL.createObjectURL(file);
                 return (
-                  <div key={`${file.name}-${i}`} className="attachment">
+                  <div key={`${file.name}-${idx}`} className="attachment">
                     <video src={preview} controls />
                     <button
                       type="button"
                       className="remove-btn"
-                      onClick={() => removeNewVideo(i)}
+                      onClick={() => setVideos([])}
                     >
                       &times;
                     </button>
                   </div>
                 );
               })}
-              <button
-                type="button"
-                className="attachment add"
-                onClick={handleAddVideo}
-              >
+              <label className="attachment add">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={onVideoChange}
+                  style={{ display: "none" }}
+                />
                 +
-              </button>
+              </label>
             </div>
           </div>
 
-          <input
-            ref={fotoInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={onFotoChange}
-            style={{ display: "none" }}
-          />
-          <input
-            ref={videoInputRef}
-            type="file"
-            accept="video/*"
-            multiple
-            onChange={onVideoChange}
-            style={{ display: "none" }}
-          />
-
-          <button
-            type="submit"
-            className="modal__submit"
-            disabled={loading}
-          >
+          <button type="submit" className="modal__submit" disabled={loading}>
             {loading ? "Salvando..." : "Salvar Alterações"}
           </button>
         </form>

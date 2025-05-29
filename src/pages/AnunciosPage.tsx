@@ -1,3 +1,4 @@
+// src/pages/AnunciosPage.tsx
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { Edit, Trash2, PlusCircle, Search, ChevronDown } from "lucide-react";
 
@@ -7,8 +8,9 @@ import EditAnuncioModal from "../components/EditAnuncioModal/EditAnuncioModal";
 import { userGetAnuncios } from "../services/anuncio/userBuscaAnuncio";
 import { deleteAnuncio } from "../services/anuncio/deleteAnuncio";
 
-import type { userGetAnuncioResponse } from "../types/userBuscaAnuncio";
 import type { AnuncioResponse } from "../types/userAnuncio";
+import type { AnuncioEditResponse } from "../types/useEditarAnuncio";
+
 
 import "../styles/anunciosPage.scss";
 
@@ -52,20 +54,20 @@ const AnunciosPage: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const data: userGetAnuncioResponse[] = await userGetAnuncios();
+        const data = await userGetAnuncios(); // userGetAnuncioResponse[]
 
         if (data.length > 0) {
           setMeuServicoId(data[0].servicoID);
         }
 
-        const list: Anuncio[] = data.map((item) => ({
+        const list = data.map<Anuncio>((item) => ({
           id: String(item.servicoID),
           title: item.nome,
           descricao: item.descricao,
           rawDate: item.dataCriacao,
           preco: item.preco,
-          categoria: item.categoria, // ← aqui
-          lugarEncontro: item.lugarEncontro, // ← e aqui
+          categoria: item.categoria,
+          lugarEncontro: item.lugarEncontro,
           imageUrl: item.fotos?.[0]?.url ?? "",
           status: "Ativo",
           createdAt: new Date(item.dataCriacao).toLocaleDateString(),
@@ -91,19 +93,26 @@ const AnunciosPage: React.FC = () => {
     setFilter(e.target.value as FilterOption);
 
   function handleCreateSuccess(item: AnuncioResponse) {
+    const fotosArr = Array.isArray(item.fotos) ? item.fotos : [];
+    const videosArr = Array.isArray(item.video)
+      ? item.fotos
+      : item.video
+      ? [item.video]
+      : [];
+
     const novo: Anuncio = {
       id: String(item.id),
       title: item.nome,
-      rawDate: item.dataCriacao,
       descricao: item.descricao,
+      rawDate: item.dataCriacao,
       preco: item.preco,
-      imageUrl: item.fotos[0] ?? "",
+      categoria: item.categoria,
+      lugarEncontro: item.lugarEncontro,
+      imageUrl: fotosArr[0] ?? "",
       status: "Ativo",
-      categoria: item.categoria, // ← aqui
-      lugarEncontro: item.lugarEncontro, // ← e aqui
       createdAt: new Date(item.dataCriacao).toLocaleDateString(),
-      fotos: item.fotos.map((url, idx) => ({ fotoAnuncioID: idx, url })),
-      videos: item.video ? [{ videoAnuncioID: 0, url: item.video }] : [],
+      fotos: fotosArr.map((url, idx) => ({ fotoAnuncioID: idx, url })),
+      videos: videosArr.map((url, idx) => ({ videoAnuncioID: idx, url })),
     };
     setAnuncios((prev) => [novo, ...prev]);
     setIsNewOpen(false);
@@ -194,9 +203,7 @@ const AnunciosPage: React.FC = () => {
             </div>
           );
         })}
-        {filtered.length === 0 && (
-          <p className="empty">Nenhum anúncio encontrado.</p>
-        )}
+        {filtered.length === 0 && <p className="empty">Nenhum anúncio encontrado.</p>}
       </div>
 
       <div className="anuncios-page__pagination">
@@ -207,7 +214,7 @@ const AnunciosPage: React.FC = () => {
 
       {isNewOpen && meuServicoId !== null && (
         <NewAnuncioModal
-          isOpen={true}
+          isOpen
           servicoID={meuServicoId}
           onClose={() => setIsNewOpen(false)}
           onSuccess={handleCreateSuccess}
@@ -225,12 +232,23 @@ const AnunciosPage: React.FC = () => {
             preco: editing.preco,
             categoria: editing.categoria,
             lugarEncontro: editing.lugarEncontro,
-            fotos: editing.fotos.map((f) => f.url),
-            video: editing.videos[0]?.url ?? "",
+            disponibilidadeDataInicio: "",
+            disponibilidadeDataFim: "",
+            disponibilidadeHoraInicio: "",
+            disponibilidadeHoraFim: "",
+            NovasFotos: editing.fotos.map((f) => f.url),
+            NovosVideos: editing.videos.map((v) => v.url),
             dataCriacao: editing.rawDate,
           }}
           onClose={() => setEditing(null)}
-          onSuccess={(upd: AnuncioResponse) => {
+          onSuccess={(upd: AnuncioEditResponse) => {
+            const fotosArr = Array.isArray(upd.NovasFotos) ? upd.NovasFotos : [];
+            const videosArr = Array.isArray(upd.NovosVideos)
+              ? upd.NovasFotos
+              : upd.NovosVideos
+              ? [upd.NovosVideos]
+              : [];
+
             const updated: Anuncio = {
               id: String(upd.id),
               title: upd.nome,
@@ -239,11 +257,11 @@ const AnunciosPage: React.FC = () => {
               categoria: upd.categoria,
               lugarEncontro: upd.lugarEncontro,
               preco: upd.preco,
-              imageUrl: upd.fotos[0] ?? "",
+              imageUrl: fotosArr[0] ?? "",
               status: "Ativo",
               createdAt: new Date(upd.dataCriacao).toLocaleDateString(),
-              fotos: upd.fotos.map((url, idx) => ({ fotoAnuncioID: idx, url })),
-              videos: upd.video ? [{ videoAnuncioID: 0, url: upd.video }] : [],
+              fotos: fotosArr.map((url, idx) => ({ fotoAnuncioID: idx, url })),
+              videos: videosArr.map((url, idx) => ({ videoAnuncioID: idx, url })),
             };
             handleEditSuccess(updated);
           }}
