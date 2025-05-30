@@ -50,7 +50,9 @@ function getMediaUrl(path: string): string {
   return `${baseUrl}${clean}`;
 }
 
-const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({ mediaItems }) => {
+const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({
+  mediaItems,
+}) => {
   const [current, setCurrent] = useState(0);
   const length = mediaItems.length;
   const next = () => setCurrent((p) => (p + 1) % length);
@@ -80,7 +82,6 @@ const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({ mediaItems }) => 
             className="card__img"
           />
         )}
-
         {length > 1 && (
           <>
             <button
@@ -98,7 +99,6 @@ const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({ mediaItems }) => 
           </>
         )}
       </div>
-
       {length > 1 && (
         <div className="carousel__thumbs-container">
           <button
@@ -111,9 +111,7 @@ const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({ mediaItems }) => 
             {mediaItems.map((m, idx) => (
               <div
                 key={idx}
-                className={`carousel__thumb ${
-                  idx === current ? "active" : ""
-                }`}
+                className={`carousel__thumb ${idx === current ? "active" : ""}`}
                 onClick={() => setCurrent(idx)}
               >
                 {m.type === "video" ? (
@@ -207,9 +205,7 @@ const AnunciosPage: React.FC = () => {
   };
 
   const handleEditSuccess = (updated: Anuncio) => {
-    setAnuncios((prev) =>
-      prev.map((a) => (a.id === updated.id ? updated : a))
-    );
+    setAnuncios((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
     setEditing(null);
   };
 
@@ -222,11 +218,20 @@ const AnunciosPage: React.FC = () => {
     }
   };
 
+  // ao clicar em "Novo Anúncio", garantimos ter meuServicoId e então abrimos o modal
+  const openNewModal = async () => {
+    if (meuServicoId === null) {
+      const data = await userGetAnuncios();
+      if (data.length > 0) setMeuServicoId(data[0].servicoID);
+    }
+    setIsNewOpen(true);
+  };
+
   return (
     <div className="anuncios-page">
       <header className="anuncios-page__header">
         <h1>Meus Anúncios</h1>
-        <button className="btn-new" onClick={() => setIsNewOpen(true)}>
+        <button className="btn-new" onClick={openNewModal}>
           <PlusCircle size={20} color="#ffe500" /> Novo Anúncio
         </button>
       </header>
@@ -287,7 +292,9 @@ const AnunciosPage: React.FC = () => {
             </div>
           );
         })}
-        {filtered.length === 0 && <p className="empty">Nenhum anúncio encontrado.</p>}
+        {filtered.length === 0 && (
+          <p className="empty">Nenhum anúncio encontrado.</p>
+        )}
       </div>
 
       <div className="anuncios-page__pagination">
@@ -296,10 +303,11 @@ const AnunciosPage: React.FC = () => {
         <button disabled>Próximo</button>
       </div>
 
-      {isNewOpen && meuServicoId !== null && (
+      {isNewOpen && (
         <NewAnuncioModal
           isOpen
-          servicoID={meuServicoId}
+          // se ainda for null, passamos 0 e deixamos o modal lidar com isso
+          servicoID={meuServicoId ?? 0}
           onClose={() => setIsNewOpen(false)}
           onSuccess={handleCreateSuccess}
         />
@@ -339,7 +347,10 @@ const AnunciosPage: React.FC = () => {
               createdAt: new Date(upd.dataCriacao).toLocaleDateString(),
               status: "Ativo",
               fotos: fotosArr.map((url, idx) => ({ fotoAnuncioID: idx, url })),
-              videos: videosArr.map((url, idx) => ({ videoAnuncioID: idx, url })),
+              videos: videosArr.map((url, idx) => ({
+                videoAnuncioID: idx,
+                url,
+              })),
             };
             handleEditSuccess(updated);
           }}
