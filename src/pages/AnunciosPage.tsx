@@ -20,7 +20,6 @@ import type { AnuncioEditResponse } from "../types/useEditarAnuncio";
 
 import "../styles/anunciosPage.scss";
 
-// Tipagem interna de mídia
 interface MediaItem {
   type: "image" | "video";
   url: string;
@@ -51,12 +50,11 @@ function getMediaUrl(path: string): string {
   return `${baseUrl}${clean}`;
 }
 
-// Carrossel interno para cada card
 const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({ mediaItems }) => {
   const [current, setCurrent] = useState(0);
   const length = mediaItems.length;
-  const next = () => setCurrent((prev) => (prev + 1) % length);
-  const prev = () => setCurrent((prev) => (prev - 1 + length) % length);
+  const next = () => setCurrent((p) => (p + 1) % length);
+  const prev = () => setCurrent((p) => (p - 1 + length) % length);
 
   if (length === 0) return null;
   const media = mediaItems[current];
@@ -66,21 +64,35 @@ const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({ mediaItems }) => 
       <div className="card__carousel-main">
         {media.type === "video" ? (
           <div className="video-wrapper">
-            <video controls src={getMediaUrl(media.url)} className="card__img" />
+            <video
+              controls
+              src={getMediaUrl(media.url)}
+              className="card__img"
+            />
             <div className="video-banner">
               <Play size={48} />
             </div>
           </div>
         ) : (
-          <img src={getMediaUrl(media.url)} alt="preview" className="card__img" />
+          <img
+            src={getMediaUrl(media.url)}
+            alt="preview"
+            className="card__img"
+          />
         )}
 
         {length > 1 && (
           <>
-            <button className="carousel__btn carousel__btn--prev" onClick={prev}>
+            <button
+              className="carousel__btn carousel__btn--prev"
+              onClick={prev}
+            >
               &larr;
             </button>
-            <button className="carousel__btn carousel__btn--next" onClick={next}>
+            <button
+              className="carousel__btn carousel__btn--next"
+              onClick={next}
+            >
               &rarr;
             </button>
           </>
@@ -99,7 +111,9 @@ const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({ mediaItems }) => 
             {mediaItems.map((m, idx) => (
               <div
                 key={idx}
-                className={`carousel__thumb ${idx === current ? "active" : ""}`}
+                className={`carousel__thumb ${
+                  idx === current ? "active" : ""
+                }`}
                 onClick={() => setCurrent(idx)}
               >
                 {m.type === "video" ? (
@@ -136,9 +150,9 @@ const AnunciosPage: React.FC = () => {
   const [meuServicoId, setMeuServicoId] = useState<number | null>(null);
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"Todos" | "Ativo" | "Pausado" | "Expirado">(
-    "Todos"
-  );
+  const [filter, setFilter] = useState<
+    "Todos" | "Ativo" | "Pausado" | "Expirado"
+  >("Todos");
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [editing, setEditing] = useState<Anuncio | null>(null);
 
@@ -193,7 +207,9 @@ const AnunciosPage: React.FC = () => {
   };
 
   const handleEditSuccess = (updated: Anuncio) => {
-    setAnuncios((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    setAnuncios((prev) =>
+      prev.map((a) => (a.id === updated.id ? updated : a))
+    );
     setEditing(null);
   };
 
@@ -251,7 +267,7 @@ const AnunciosPage: React.FC = () => {
           return (
             <div key={a.id} className="card">
               <div className="card__image">
-                <CardCarousel mediaItems={mediaItems} posterUrl={a.fotos[0]?.url || ""} />
+                <CardCarousel mediaItems={mediaItems} />
                 <span className={`badge badge--${a.status.toLowerCase()}`}>
                   {a.status}
                 </span>
