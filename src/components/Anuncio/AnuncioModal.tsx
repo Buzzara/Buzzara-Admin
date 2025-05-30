@@ -109,113 +109,82 @@ useEffect(() => {
 
   const handleLoadMorePhotos = () => setPhotoSlots((prev) => prev + 4);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+const getWeekdayName = (dateString: string) => {
+  const days = [
+    "Domingo",
+    "Segunda-feira",
+    "Terça-feira",
+    "Quarta-feira",
+    "Quinta-feira",
+    "Sexta-feira",
+    "Sábado",
+  ];
+  const date = new Date(dateString);
+  return days[date.getDay()];
+};
 
-    try {
-      const form = new FormData();
-      form.append("servicoID", servicoID.toString());
-      form.append("nome", nome);
-      form.append("descricao", descricao);
-      form.append("preco", preco.toString());
-      form.append("categoria", categoria);
-      form.append("lugarEncontro", lugarEncontro);
-      if (idade !== "") form.append("idade", String(idade));
-      if (peso !== "") form.append("peso", String(peso));
-      if (altura !== "") form.append("altura", String(altura));
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
 
-      form.append("dataCriacao", new Date().toISOString());
+  try {
+    const form = new FormData();
+    form.append("servicoID", servicoID.toString());
+    form.append("nome", nome);
+    form.append("descricao", descricao);
+    form.append("preco", preco.toString());
+    form.append("categoria", categoria);
+    form.append("lugarEncontro", lugarEncontro);
 
-      // 🗓️ Disponibilidade formatada
-      function getWeekdayName(dateString: string) {
-        const days = [
-          "Domingo",
-          "Segunda-feira",
-          "Terça-feira",
-          "Quarta-feira",
-          "Quinta-feira",
-          "Sexta-feira",
-          "Sábado",
-        ];
-        const date = new Date(dateString);
-        return days[date.getDay()];
-      }
+    if (idade !== "") form.append("idade", String(idade));
+    if (peso !== "") form.append("peso", String(peso));
+    if (altura !== "") form.append("altura", String(altura));
 
-      let disponibilidade = "";
-      if (
-        disponibilidadeDataInicio &&
-        disponibilidadeDataFim &&
-        disponibilidadeHoraInicio &&
-        disponibilidadeHoraFim
-      ) {
-        const diaInicio = getWeekdayName(disponibilidadeDataInicio);
-        const diaFim = getWeekdayName(disponibilidadeDataFim);
+    form.append("dataCriacao", new Date().toISOString());
 
-        disponibilidade =
-          diaInicio === diaFim
-            ? `${diaInicio}, horário: ${disponibilidadeHoraInicio} às ${disponibilidadeHoraFim}`
-            : `${diaInicio} até ${diaFim}, horário: ${disponibilidadeHoraInicio} às ${disponibilidadeHoraFim}`;
+    let disponibilidade = "";
+    if (
+      disponibilidadeDataInicio &&
+      disponibilidadeDataFim &&
+      disponibilidadeHoraInicio &&
+      disponibilidadeHoraFim
+    ) {
+      const diaInicio = getWeekdayName(disponibilidadeDataInicio);
+      const diaFim = getWeekdayName(disponibilidadeDataFim);
 
-        form.append("disponibilidade", disponibilidade);
-        console.log("🕒 Disponibilidade formatada:", disponibilidade);
-      } else {
-        console.warn(
-          "⚠️ Dados de disponibilidade incompletos. Nada será enviado."
-        );
-      }
+      disponibilidade =
+        diaInicio === diaFim
+          ? `${diaInicio}, horário: ${disponibilidadeHoraInicio} às ${disponibilidadeHoraFim}`
+          : `${diaInicio} até ${diaFim}, horário: ${disponibilidadeHoraInicio} às ${disponibilidadeHoraFim}`;
 
-      // 📍 Localização — campos individuais, conforme o backend espera
-      form.append("endereco", endereco);
-      form.append("cidade", cidade);
-      form.append("estado", estado);
-      form.append("bairro", bairro);
-      if (latitude !== null) form.append("latitude", latitude.toString());
-      if (longitude !== null) form.append("longitude", longitude.toString());
-
-      // 📷 Mídia
-      fotos.forEach((file) => form.append("Fotos", file));
-      if (video) form.append("Video", video);
-
-      console.log("📤 Dados finais enviados:", {
-        servicoID,
-        nome,
-        descricao,
-        preco,
-        categoria,
-        lugarEncontro,
-        idade,
-        peso,
-        altura,
-        disponibilidade,
-        endereco,
-        cidade,
-        estado,
-        bairro,
-        latitude,
-        longitude,
-        fotosCount: fotos.length,
-        video: video ? "✔️" : "❌",
-      });
-
-      const { data: anuncio } = await api.post<AnuncioResponse>(
-        "/anuncios",
-        form,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-
-      onSuccess(anuncio);
-      onClose();
-    } catch (err) {
-      console.error("❌ Erro ao criar anúncio:", err);
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
-    } finally {
-      setLoading(false);
+      form.append("disponibilidade", disponibilidade);
     }
-  };
+
+    form.append("endereco", endereco);
+    form.append("cidade", cidade);
+    form.append("estado", estado);
+    form.append("bairro", bairro);
+    if (latitude !== null) form.append("latitude", latitude.toString());
+    if (longitude !== null) form.append("longitude", longitude.toString());
+
+    fotos.forEach((file) => form.append("Fotos", file));
+    if (video) form.append("Video", video);
+
+    const { data: anuncio } = await api.post<AnuncioResponse>("/anuncios", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    onSuccess(anuncio);
+    onClose();
+  } catch (err: any) {
+    const message = err.response?.data?.error || err.message;
+    console.error("Erro ao criar anúncio:", message);
+    setError(message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="modal-overlay">

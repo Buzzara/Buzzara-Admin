@@ -16,16 +16,20 @@ import { AlterarSenhaDTO, ApiResponse } from "../types/userAlterarSenhaLogado";
 import axios from "axios";
 
 type ValidationErrorResponse = {
-    message?: string;
+  message?: string;
   errors: Record<string, string[]>;
 };
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
 
-  // URLs das fotos (string | undefined)
+  // URLs das fotos
   const [profileUrl, setProfileUrl] = useState<string | undefined>(undefined);
   const [coverUrl, setCoverUrl] = useState<string | undefined>(undefined);
+
+  // Dados adicionais
+  const [descricao, setDescricao] = useState<string>("");
+  const [telefone, setTelefone] = useState<string>("");
 
   // Estado de upload
   const [profileFile, setProfileFile] = useState<File | null>(null);
@@ -40,14 +44,15 @@ const Profile: React.FC = () => {
   const [errors, setErrors] = useState<string[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Carrega perfil (incluindo fotoPerfilUrl e fotoCapaUrl)
+  // Carrega perfil
   useEffect(() => {
     async function loadProfile() {
       try {
         const data: UserProfile = await fetchCurrentUserProfile();
-        // Converte null → undefined para casar com useState<string | undefined>
         setProfileUrl(data.fotoPerfilUrl ?? undefined);
         setCoverUrl(data.fotoCapaUrl ?? undefined);
+        setDescricao(data.descricao ?? "");
+        setTelefone(data.telefone ?? "");
       } catch (err) {
         console.error("[Profile] error fetching profile:", err);
       }
@@ -144,20 +149,55 @@ const Profile: React.FC = () => {
 
   return (
     <div className="profile-page">
-      <ProfileCard
-        name={user?.nome || ""}
-        role={user?.role || ""}
-        avatarUrl={profileUrl}
-        coverUrl={coverUrl}
-        onProfileSelect={handleProfileSelect}
-        onCoverSelect={handleCoverSelect}
-        onSavePhotos={handleSavePhotos}
-        profileLoading={uploadLoading}
-        coverLoading={uploadLoading}
-        uploadError={uploadError}
-      />
+      {/* Seção Perfil (card) */}
+      <section id="perfil">
+        <ProfileCard
+          name={user?.nome || ""}
+          role={user?.role || ""}
+          avatarUrl={profileUrl}
+          coverUrl={coverUrl}
+          onProfileSelect={handleProfileSelect}
+          onCoverSelect={handleCoverSelect}
+          onSavePhotos={handleSavePhotos}
+          profileLoading={uploadLoading}
+          coverLoading={uploadLoading}
+          uploadError={uploadError}
+        />
+      </section>
 
-      <div className="security-section">
+      {/* Menu de Navegação */}
+      <ul className="nav-menu">
+        <li className="active"><a href="#perfil">Perfil</a></li>
+        <li><a href="#info">Informações</a></li>
+        <li><a href="#seguranca">Segurança</a></li>
+      </ul>
+
+      {/* Seção Informações Pessoais */}
+      <section id="info" className="info-section">
+        <h2>Informações Pessoais</h2>
+        <div className="form-group">
+          <label htmlFor="description">Descrição</label>
+          <textarea
+            id="description"
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            rows={4}
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="phone">Telefone</label>
+          <input
+            type="tel"
+            id="phone"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
+          />
+        </div>
+        <button className="btn-save-info">Salvar Informações</button>
+      </section>
+
+      {/* Seção Segurança */}
+      <section id="seguranca" className="security-section">
         <h2>Segurança</h2>
         <p>Altere sua senha e gerencie configurações de segurança.</p>
 
@@ -207,7 +247,7 @@ const Profile: React.FC = () => {
             Atualizar Senha
           </button>
         </form>
-      </div>
+      </section>
     </div>
   );
 };
