@@ -1,6 +1,13 @@
 // src/pages/AnunciosPage.tsx
 import React, { useState, useEffect, ChangeEvent } from "react";
-import { Edit, Trash2, PlusCircle, Search, ChevronDown } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  PlusCircle,
+  Search,
+  ChevronDown,
+  Play,
+} from "lucide-react";
 
 import NewAnuncioModal from "../components/Anuncio/AnuncioModal";
 import EditAnuncioModal from "../components/EditAnuncioModal/EditAnuncioModal";
@@ -13,11 +20,15 @@ import type { AnuncioEditResponse } from "../types/useEditarAnuncio";
 
 import "../styles/anunciosPage.scss";
 
-// Interface interna usada apenas neste componente
+// Tipagem interna de mídia
+interface MediaItem {
+  type: "image" | "video";
+  url: string;
+}
+
 interface Anuncio {
   id: string;
   title: string;
-  imageUrl: string;
   descricao: string;
   preco: number;
   status: "Ativo" | "Pausado" | "Expirado";
@@ -40,32 +51,104 @@ function getMediaUrl(path: string): string {
   return `${baseUrl}${clean}`;
 }
 
-const FILTER_OPTIONS = ["Todos", "Ativo", "Pausado", "Expirado"] as const;
-type FilterOption = (typeof FILTER_OPTIONS)[number];
+// Carrossel interno para cada card
+const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({ mediaItems }) => {
+  const [current, setCurrent] = useState(0);
+  const length = mediaItems.length;
+  const next = () => setCurrent((prev) => (prev + 1) % length);
+  const prev = () => setCurrent((prev) => (prev - 1 + length) % length);
+
+  if (length === 0) return null;
+  const media = mediaItems[current];
+
+  return (
+    <div className="card__carousel">
+      <div className="card__carousel-main">
+        {media.type === "video" ? (
+          <div className="video-wrapper">
+            <video controls src={getMediaUrl(media.url)} className="card__img" />
+            <div className="video-banner">
+              <Play size={48} />
+            </div>
+          </div>
+        ) : (
+          <img src={getMediaUrl(media.url)} alt="preview" className="card__img" />
+        )}
+
+        {length > 1 && (
+          <>
+            <button className="carousel__btn carousel__btn--prev" onClick={prev}>
+              &larr;
+            </button>
+            <button className="carousel__btn carousel__btn--next" onClick={next}>
+              &rarr;
+            </button>
+          </>
+        )}
+      </div>
+
+      {length > 1 && (
+        <div className="carousel__thumbs-container">
+          <button
+            className="carousel__thumb-btn carousel__thumb-btn--prev"
+            onClick={prev}
+          >
+            &larr;
+          </button>
+          <div className="carousel__thumbs">
+            {mediaItems.map((m, idx) => (
+              <div
+                key={idx}
+                className={`carousel__thumb ${idx === current ? "active" : ""}`}
+                onClick={() => setCurrent(idx)}
+              >
+                {m.type === "video" ? (
+                  <video
+                    src={getMediaUrl(m.url)}
+                    muted
+                    preload="metadata"
+                    className="thumb__img"
+                  />
+                ) : (
+                  <img
+                    src={getMediaUrl(m.url)}
+                    alt="thumb"
+                    className="thumb__img"
+                  />
+                )}
+                {m.type === "video" && <span className="thumb__play">▶</span>}
+              </div>
+            ))}
+          </div>
+          <button
+            className="carousel__thumb-btn carousel__thumb-btn--next"
+            onClick={next}
+          >
+            &rarr;
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const AnunciosPage: React.FC = () => {
   const [meuServicoId, setMeuServicoId] = useState<number | null>(null);
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<FilterOption>("Todos");
+  const [filter, setFilter] = useState<"Todos" | "Ativo" | "Pausado" | "Expirado">(
+    "Todos"
+  );
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [editing, setEditing] = useState<Anuncio | null>(null);
 
-  // carrega anúncios
   useEffect(() => {
     (async () => {
       try {
         const data = await userGetAnuncios();
-        if (data.length > 0) {
-          setMeuServicoId(data[0].servicoID);
-        }
-
-        const list: Anuncio[] = data.map((item) => {
-          // item.fotos e item.videos são arrays de DTOs
-          const fotosDto = item.fotos ?? [];
-          const videosDto = item.videos ?? [];
-
-          return {
+        if (data.length > 0) setMeuServicoId(data[0].servicoID);
+        setAnuncios(
+          data.map((item) => ({
             id: String(item.servicoID),
             title: item.nome,
             descricao: item.descricao,
@@ -73,21 +156,12 @@ const AnunciosPage: React.FC = () => {
             preco: item.preco,
             categoria: item.categoria,
             lugarEncontro: item.lugarEncontro,
-            imageUrl: fotosDto[0]?.url ?? "",
-            status: "Ativo",
             createdAt: new Date(item.dataCriacao).toLocaleDateString(),
-            fotos: fotosDto.map((f) => ({
-              fotoAnuncioID: f.fotoAnuncioID,
-              url: f.url,
-            })),
-            videos: videosDto.map((v) => ({
-              videoAnuncioID: v.videoAnuncioID,
-              url: v.url,
-            })),
-          };
-        });
-
-        setAnuncios(list);
+            status: "Ativo",
+            fotos: item.fotos ?? [],
+            videos: item.videos ?? [],
+          }))
+        );
       } catch (err) {
         console.error("Erro ao buscar anúncios:", err);
       }
@@ -100,16 +174,7 @@ const AnunciosPage: React.FC = () => {
       (filter === "Todos" || a.status === filter)
   );
 
-  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) =>
-    setSearch(e.target.value);
-  const handleFilterChange = (e: ChangeEvent<HTMLSelectElement>) =>
-    setFilter(e.target.value as FilterOption);
-
-  // ao criar novo anúncio
-  function handleCreateSuccess(item: AnuncioResponse) {
-    const fotosDto = item.fotos ?? [];
-    const videosDto = item.videos ?? [];
-
+  const handleCreateSuccess = (item: AnuncioResponse) => {
     const novo: Anuncio = {
       id: String(item.servicoID),
       title: item.nome,
@@ -118,34 +183,28 @@ const AnunciosPage: React.FC = () => {
       preco: item.preco,
       categoria: item.categoria,
       lugarEncontro: item.lugarEncontro,
-      imageUrl: fotosDto[0]?.url ?? "",
-      status: "Ativo",
       createdAt: new Date(item.dataCriacao).toLocaleDateString(),
-      fotos: fotosDto.map((f) => ({ fotoAnuncioID: f.fotoAnuncioID, url: f.url })),
-      videos: videosDto.map((v) => ({
-        videoAnuncioID: v.videoAnuncioID,
-        url: v.url,
-      })),
+      status: "Ativo",
+      fotos: item.fotos ?? [],
+      videos: item.videos ?? [],
     };
     setAnuncios((prev) => [novo, ...prev]);
     setIsNewOpen(false);
-  }
+  };
 
-  // ao editar anúncio
-  function handleEditSuccess(updated: Anuncio) {
+  const handleEditSuccess = (updated: Anuncio) => {
     setAnuncios((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
     setEditing(null);
-  }
+  };
 
-  // excluir anúncio
-  async function handleDelete(id: string) {
+  const handleDelete = async (id: string) => {
     try {
       await deleteAnuncio(Number(id));
       setAnuncios((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
       console.error("Erro ao deletar anúncio:", err);
     }
-  }
+  };
 
   return (
     <div className="anuncios-page">
@@ -163,12 +222,17 @@ const AnunciosPage: React.FC = () => {
             type="text"
             placeholder="Buscar anúncios..."
             value={search}
-            onChange={handleSearchChange}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <div className="select-wrapper">
-          <select value={filter} onChange={handleFilterChange}>
-            {FILTER_OPTIONS.map((opt) => (
+          <select
+            value={filter}
+            onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+              setFilter(e.target.value as any)
+            }
+          >
+            {["Todos", "Ativo", "Pausado", "Expirado"].map((opt) => (
               <option key={opt} value={opt}>
                 {opt}
               </option>
@@ -180,25 +244,14 @@ const AnunciosPage: React.FC = () => {
 
       <div className="anuncios-page__grid">
         {filtered.map((a) => {
-          const hasVideo = a.videos.length > 0;
-          const mediaUrl = hasVideo ? a.videos[0].url : a.imageUrl;
+          const mediaItems: MediaItem[] = [
+            ...a.fotos.map((f) => ({ type: "image" as const, url: f.url })),
+            ...a.videos.map((v) => ({ type: "video" as const, url: v.url })),
+          ];
           return (
             <div key={a.id} className="card">
               <div className="card__image">
-                {hasVideo ? (
-                  <video
-                    controls
-                    src={getMediaUrl(mediaUrl)}
-                    poster={getMediaUrl(a.imageUrl)}
-                    className="card__img"
-                  />
-                ) : (
-                  <img
-                    src={getMediaUrl(mediaUrl)}
-                    alt={a.title}
-                    className="card__img"
-                  />
-                )}
+                <CardCarousel mediaItems={mediaItems} posterUrl={a.fotos[0]?.url || ""} />
                 <span className={`badge badge--${a.status.toLowerCase()}`}>
                   {a.status}
                 </span>
@@ -221,14 +274,12 @@ const AnunciosPage: React.FC = () => {
         {filtered.length === 0 && <p className="empty">Nenhum anúncio encontrado.</p>}
       </div>
 
-      {/* Paginação stub */}
       <div className="anuncios-page__pagination">
         <button disabled>Anterior</button>
         <span>1 de 1</span>
         <button disabled>Próximo</button>
       </div>
 
-      {/* Novo anúncio */}
       {isNewOpen && meuServicoId !== null && (
         <NewAnuncioModal
           isOpen
@@ -238,7 +289,6 @@ const AnunciosPage: React.FC = () => {
         />
       )}
 
-      {/* Editar anúncio */}
       {editing && (
         <EditAnuncioModal
           isOpen
@@ -262,7 +312,6 @@ const AnunciosPage: React.FC = () => {
           onSuccess={(upd: AnuncioEditResponse) => {
             const fotosArr = upd.novasFotos ?? [];
             const videosArr = upd.novosVideos ?? [];
-
             const updated: Anuncio = {
               id: String(upd.servicoID),
               title: upd.nome,
@@ -271,9 +320,8 @@ const AnunciosPage: React.FC = () => {
               categoria: upd.categoria,
               lugarEncontro: upd.lugarEncontro,
               preco: upd.preco,
-              imageUrl: fotosArr[0] ?? "",
-              status: "Ativo",
               createdAt: new Date(upd.dataCriacao).toLocaleDateString(),
+              status: "Ativo",
               fotos: fotosArr.map((url, idx) => ({ fotoAnuncioID: idx, url })),
               videos: videosArr.map((url, idx) => ({ videoAnuncioID: idx, url })),
             };
