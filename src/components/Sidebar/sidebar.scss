@@ -2,16 +2,16 @@
    1) Estilos comuns para ambas sidebars
    ------------------------------------------------- */
 .sidebar {
-  background-color: #91A0A8;
+  background-color: #91a0a8;
   border-right: 1px solid #e5e5e5;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto 1fr auto; /* logo, greeting, nav, logout */
   padding: 2rem 1rem;
   z-index: 1002;
 
   .logo {
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem; /* reduzido para aproximar da saudação */
 
     img {
       max-width: 100%;
@@ -19,11 +19,20 @@
     }
   }
 
+  /* Saudação logo abaixo da logo */
+ .sidebar-greeting {
+    margin: 2rem 0; /* reduzido para aproximar do menu */
+    font-size: 1rem;
+    color: #1e1e2f;
+    font-weight: 700 !important;    /* negrito forçado */
+    font-style: italic;
+  }
+
   nav {
-    overflow-y: auto;
+    /* overflow-y: auto; remoção para nav não ocupar todo espaço */
 
     ul {
-      list-style: none;    /* remove bullets */
+      list-style: none;
       margin: 0;
       padding: 0;
 
@@ -46,7 +55,7 @@
           background-color: #eef1ff;
           color: #1b1b16;
           font-weight: 600;
-          border-left: 4px solid #FFE500;
+          border-left: 4px solid #ffe500;
         }
       }
     }
@@ -55,7 +64,8 @@
   .logout-container {
     display: flex;
     justify-content: center;
-    padding: 4rem 0 1rem;
+    margin-top: 2rem; /* espaço acima do botão sair */
+    padding: 4rem 0;
   }
 
   .logout-button {
@@ -65,7 +75,7 @@
     padding: 0.75rem 1rem;
     background: none;
     border: none;
-    color: #E3371E;
+    color: #e3371e;
     font-weight: 500;
     cursor: pointer;
     transition: background 0.3s, color 0.3s;
@@ -92,16 +102,14 @@
    3) Drawer móvel (mobile-only)
    ------------------------------------------------- */
 .sidebar--drawer {
-  position: relative;       /* posicionado pelo overlay */
+  position: relative;
   width: 240px;
   height: 100vh;
   transform: translateX(-100%);
   transition: transform 0.3s ease;
 
-  /* -------------------------------------------------
-     6) Ajustes finos para o drawer
-     ------------------------------------------------- */
-  padding: 0;               /* retira o padding geral */
+  padding: 0;
+  display: grid;
   grid-template-rows: auto min-content 1fr auto;
 
   .logo {
@@ -124,7 +132,7 @@
   display: none;
   position: fixed;
   inset: 0;
-  z-index: 2000;           /* acima da sidebar fixa */
+  z-index: 2000;
   transition: opacity 0.3s ease, visibility 0.3s ease;
   visibility: hidden;
   opacity: 0;
@@ -164,20 +172,18 @@
   left: 1rem;
   background: none;
   border: none;
-  z-index: 2001;           /* acima do overlay */
+  z-index: 2001;
   cursor: pointer;
 }
 
 /* -------------------------------------------------
-   7) Responsividade e largura 100% no mobile
+   6) Responsividade
    ------------------------------------------------- */
 @media (max-width: 768px) {
-  /* esconde a sidebar fixa */
   .sidebar--fixed {
     display: none !important;
   }
 
-  /* mostra o hambúrguer e o overlay */
   .mobile-hamburger {
     display: block;
   }
@@ -186,14 +192,12 @@
     display: block;
   }
 
-  /* drawer ocupa 100% da largura */
   .sidebar--drawer {
     width: 100%;
   }
 }
 
 @media (min-width: 769px) {
-  /* desktop: esconde overlay e hambúrguer */
   .sidebar-overlay,
   .mobile-hamburger {
     display: none !important;

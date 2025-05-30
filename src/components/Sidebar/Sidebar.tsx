@@ -13,47 +13,35 @@ import {
 import "../Sidebar/sidebar.scss";
 import { useAuth } from "../../context/AuthContext";
 
-interface UserData {
-  id: number;
-  nome: string;
-  email: string;
-  role: string;
-  abilityRules: { action: string; subject: string }[];
-}
-
 export default function Sidebar() {
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const { logout, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const { logout } = useAuth();
   const navigate = useNavigate();
 
-  // Carrega papel do usuário do localStorage
+  // Definir saudação conforme horário
+  const [greeting, setGreeting] = useState<string>("");
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      try {
-        const user: UserData = JSON.parse(stored);
-        setUserRole(user.role);
-      } catch {
-        console.error("Erro ao parsear usuário");
-      }
-    }
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Bom dia");
+    else if (hour < 18) setGreeting("Boa tarde");
+    else setGreeting("Boa noite");
   }, []);
 
-  // Definição de todas as opções de menu
+  // Definição de itens do menu
   const allMenu = [
     { icon: <Home size={20} />, label: "Dashboard", path: "/dashboard" },
-    { icon: <Wallet size={20} />, label: "Historico de compras", path: "/historico-de-compras" },
+    {
+      icon: <Wallet size={20} />,
+      label: "Histórico de compras",
+      path: "/historico-de-compras",
+    },
     { icon: <User size={20} />, label: "Conta", path: "/profile" },
-    { icon: <Landmark size={20} />, label: "Anuncios", path: "/anuncios" },
+    { icon: <Landmark size={20} />, label: "Anúncios", path: "/anuncios" },
     { icon: <Wrench size={20} />, label: "Suporte", path: "/suporte" },
   ];
 
-  // Filtra itens para não-admin
-  const menuItems =
-    userRole && userRole !== "admin"
-      ? allMenu.filter(item => item.label !== "My Privileges" && item.label !== "Setting")
-      : allMenu;
+  // Se desejar filtros de permissão:
+  const menuItems = allMenu; // ou filtre conforme user?.role
 
   // Logout
   const handleLogout = async () => {
@@ -67,11 +55,16 @@ export default function Sidebar() {
     }
   };
 
-  // Conteúdo comum a ambas sidebars
   const sidebarContent = (
     <>
       <div className="logo">
         <img src="/logo.svg" alt="Logo" />
+      </div>
+      <div className="sidebar-greeting">
+        <span role="img" aria-label="wave">
+          👋 {greeting},
+        </span>
+        <span className="username">{user?.nome}!</span>
       </div>
 
       <nav>
@@ -80,7 +73,9 @@ export default function Sidebar() {
             <li key={i}>
               <NavLink
                 to={item.path}
-                className={({ isActive }) => `menu-item ${isActive ? "active" : ""}`}
+                className={({ isActive }) =>
+                  `menu-item ${isActive ? "active" : ""}`
+                }
                 onClick={() => setIsOpen(false)}
               >
                 {item.icon}
@@ -90,7 +85,6 @@ export default function Sidebar() {
           ))}
         </ul>
       </nav>
-
       <div className="logout-container">
         <button className="logout-button" onClick={handleLogout}>
           <LogOut size={20} />
@@ -102,10 +96,10 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* 1) Sidebar fixa para desktop */}
+      {/* Sidebar fixa para desktop */}
       <aside className="sidebar sidebar--fixed">{sidebarContent}</aside>
 
-      {/* 2) Botão hambúrguer para mobile */}
+      {/* Botão hambúrguer mobile */}
       <button
         className="mobile-hamburger"
         onClick={() => setIsOpen(true)}
@@ -114,7 +108,7 @@ export default function Sidebar() {
         <Menu size={24} />
       </button>
 
-      {/* 3) Overlay + drawer para mobile */}
+      {/* Drawer em overlay mobile */}
       <div className={`sidebar-overlay ${isOpen ? "visible" : ""}`}>
         <aside className="sidebar sidebar--drawer">
           <header className="sidebar__mobile-header">
