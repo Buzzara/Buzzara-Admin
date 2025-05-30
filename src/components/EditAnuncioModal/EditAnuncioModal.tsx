@@ -22,7 +22,7 @@ function getWeekdayName(dateString: string): string {
 
 interface EditAnuncioModalProps {
   isOpen: boolean;
-  anuncio: AnuncioEditResponse;    // só esse tipo, sem DisponibilidadeDetalhada
+  anuncio: AnuncioEditResponse;
   onClose: () => void;
   onSuccess: (atualizado: AnuncioEditResponse) => void;
 }
@@ -45,7 +45,7 @@ export default function EditAnuncioModal({
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFim, setHoraFim] = useState("");
 
-  // só novas mídias
+  // até 4 fotos e 1 vídeo novos
   const [fotos, setFotos] = useState<File[]>([]);
   const [videos, setVideos] = useState<File[]>([]);
 
@@ -62,13 +62,13 @@ export default function EditAnuncioModal({
     setCategoria(anuncio.categoria);
     setLugarEncontro(anuncio.lugarEncontro);
 
-    // limpa datas/hora para forçar o usuário a selecionar
+    // força selecionar novas datas/horas
     setDataInicio("");
     setDataFim("");
     setHoraInicio("");
     setHoraFim("");
 
-    // limpa galerias antigas—apenas novas serão enviadas
+    // limpa mídias antigas
     setFotos([]);
     setVideos([]);
     setError(null);
@@ -76,8 +76,11 @@ export default function EditAnuncioModal({
 
   const onFotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    // sobrescreve tudo que vier antes
-    setFotos(Array.from(e.target.files));
+    const newFiles = Array.from(e.target.files);
+    setFotos(prev => {
+      const combined = [...prev, ...newFiles].slice(0, 4);
+      return combined;
+    });
     e.target.value = "";
   };
 
@@ -93,7 +96,6 @@ export default function EditAnuncioModal({
     setError(null);
 
     try {
-      // monta string única de disponibilidade
       const diaIn = getWeekdayName(dataInicio);
       const diaFm = getWeekdayName(dataFim);
       const disponibilidade = `${diaIn} até ${diaFm}, horário: ${horaInicio} às ${horaFim}`;
@@ -106,7 +108,6 @@ export default function EditAnuncioModal({
         lugarEncontro,
         disponibilidade,
       };
-      // sempre limpa antigas no back, só envia as que escolheu agora
       if (fotos.length) params.novasFotos = fotos;
       if (videos.length) params.novoVideo = videos[0];
 
@@ -237,35 +238,38 @@ export default function EditAnuncioModal({
             </div>
           </div>
 
-          {/* Adicionar Fotos — sempre limpa o anterior */}
+          {/* Adicionar Fotos (até 4) */}
           <div className="modal__section">
-            <div className="modal__section-title">Adicionar Fotos</div>
             <div className="modal__attachments">
               {fotos.map((file, idx) => {
                 const preview = URL.createObjectURL(file);
                 return (
                   <div key={idx} className="attachment">
-                    <img src={preview} alt="Nova foto" />
+                    <img src={preview} alt={`Foto ${idx + 1}`} />
                     <button
                       type="button"
                       className="remove-btn"
-                      onClick={() => setFotos(prev => prev.filter((_, i) => i !== idx))}
+                      onClick={() =>
+                        setFotos(prev => prev.filter((_, i) => i !== idx))
+                      }
                     >
                       &times;
                     </button>
                   </div>
                 );
               })}
-              <label className="attachment add">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={onFotoChange}
-                  style={{ display: "none" }}
-                />
-                +
-              </label>
+              {fotos.length < 4 && (
+                <label className="attachment add">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={onFotoChange}
+                    style={{ display: "none" }}
+                  />
+                  +
+                </label>
+              )}
             </div>
           </div>
 
@@ -288,15 +292,17 @@ export default function EditAnuncioModal({
                   </div>
                 );
               })}
-              <label className="attachment add">
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={onVideoChange}
-                  style={{ display: "none" }}
-                />
-                +
-              </label>
+              {videos.length === 0 && (
+                <label className="attachment add">
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={onVideoChange}
+                    style={{ display: "none" }}
+                  />
+                  +
+                </label>
+              )}
             </div>
           </div>
 
