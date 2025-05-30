@@ -51,7 +51,7 @@ const Profile: React.FC = () => {
         const data: UserProfile = await fetchCurrentUserProfile();
         setProfileUrl(data.fotoPerfilUrl ?? undefined);
         setCoverUrl(data.fotoCapaUrl ?? undefined);
-        setDescricao(data.descricao ?? "");
+        // setDescricao(data.descricao ?? "");
         setTelefone(data.telefone ?? "");
       } catch (err) {
         console.error("[Profile] error fetching profile:", err);
