@@ -38,11 +38,11 @@ const Profile: React.FC = () => {
   const [uploadError, setUploadError] = useState<string>();
 
   // Estado de senha
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState<string>("");
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState<string>("");
   const [errors, setErrors] = useState<string[]>([]);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState<string>("");
 
   // Carrega perfil
   useEffect(() => {
@@ -164,13 +164,6 @@ const Profile: React.FC = () => {
           uploadError={uploadError}
         />
       </section>
-
-      {/* Menu de Navegação */}
-      <ul className="nav-menu">
-        <li className="active"><a href="#perfil">Perfil</a></li>
-        <li><a href="#info">Informações</a></li>
-        <li><a href="#seguranca">Segurança</a></li>
-      </ul>
 
       {/* Seção Informações Pessoais */}
       <section id="info" className="info-section">
