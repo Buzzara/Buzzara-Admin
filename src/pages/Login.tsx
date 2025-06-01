@@ -14,15 +14,13 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // Imagens de fundo para o slide
   const images = [
-    "../src/assets/image/image.png",
-    "../src/assets/image/slide.jpg",
-    "../src/assets/image/slide.jpg",
+    "../src/assets/image/banner.png",
+    "../src/assets/image/banner2.png",
+    "../src/assets/image/banner3.png",
   ];
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Se o usuário já estiver autenticado (e não estiver carregando), redireciona
   useEffect(() => {
     if (!loading && user) {
       navigate("/dashboard");
