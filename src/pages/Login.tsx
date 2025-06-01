@@ -5,6 +5,11 @@ import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+// importe cada banner aqui
+import banner1 from "../assets/image/banner.png";
+import banner2 from "../assets/image/banner2.png";
+import banner3 from "../assets/image/banner3.png";
+
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const { login, user, loading } = useAuth();
@@ -14,11 +19,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const images = [
-    "../src/assets/image/banner.png",
-    "../src/assets/image/banner2.png",
-    "../src/assets/image/banner3.png",
-  ];
+  // use um array de imports em vez de strings
+  const images = [banner1, banner2, banner3];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -35,7 +37,6 @@ export default function Login() {
     return () => clearInterval(interval);
   }, [images.length]);
 
-  // Handler do form de login
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -57,6 +58,7 @@ export default function Login() {
       <div
         className="login-left"
         style={{
+          /* aqui a variável já contém a URL correta (em dev e produção) */
           backgroundImage: `url(${images[currentIndex]})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
