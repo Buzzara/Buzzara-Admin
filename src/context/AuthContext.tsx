@@ -7,17 +7,11 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import api from "../services/api"; // sua instância Axios configurada em src/services/api
 import { userLogin } from "../services/login/userLogin";
 import { authUser } from "../services/login/authUser";
 import type { AuthUserResponse } from "../types/authUser";
 import type { UserLoginResponse } from "../types/userLoginTypes";
 
-/**
- *  1) Interface que armazena tudo que o contexto conhece sobre o usuário:
- *     - id, nome, email, role, ativo, abilityRules (vindo de /auth/me)
- *     - perfilAcompanhanteID (vindo de /auth/me OU indefinido até que o modal crie um novo perfil)
- */
 interface UserData {
   id: number;
   nome: string;
@@ -25,9 +19,8 @@ interface UserData {
   ativo: boolean;
   role: string;
   abilityRules: { action: string; subject: string }[];
-
-  // ← esse campo pode vir do /auth/me (se existir) ou ser setado depois
-  perfilAcompanhanteID?: number;
+  /** Este campo é exatamente o “perfilAcompanhanteID” vindo de /auth/me ou criado depois **/
+  perfilAcompanhanteID?: number | null;
 }
 
 interface AuthContextType {
@@ -40,7 +33,9 @@ interface AuthContextType {
   checkAuth: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
@@ -48,67 +43,54 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  /**
-   *  checkAuth(): quando montamos o Context pela primeira vez,
-   *  fazemos GET /auth/me (via authUser()) e preenchemos os dados de user
-   *  (incluindo possível perfilAcompanhanteID). Se der 401, jogamos user para null.
-   */
+  // 1) Faz GET /auth/me e popula user (incluindo perfilAcompanhanteID, se existir)
   const checkAuth = async () => {
     setLoading(true);
     try {
-      // authUser() deve chamar GET /auth/me e devolver { userData: { ... } }
       const response: AuthUserResponse = await authUser();
-      const { userData } = response;
-      setUser(userData);
+      // response.userData já deve vir com “perfilAcompanhanteID?” preenchido (ou null)
+      setUser(response.userData);
     } catch (err) {
-      // Se deu erro (ex: 401 Unauthorized), limpamos user
       setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   *  login(): faz userLogin({ email, password }) → o backend devolve
-   *  { accessToken, refreshToken, userData: { id, nome, email, role, ativo, abilityRules, perfilAcompanhanteID? } }
-   *  Então já armazenamos esse userData no state.  
-   *  Os tokens (HttpOnly) ficam sendo gerenciados pelo cookie “withCredentials”.
-   */
+  // 2) Faz login e já armazena o userData (com perfilAcompanhanteID, se o backend retornar)
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const loginResponse: UserLoginResponse = await userLogin({ email, password });
-      const { userData } = loginResponse;
-      setUser(userData);
+      const loginResponse: UserLoginResponse = await userLogin({
+        email,
+        password,
+      });
+      setUser(loginResponse.userData);
     } catch (err) {
       setUser(null);
-      throw err; // O componente que chamou o login pode tratar mensagem de erro
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   *  logout(): chama /auth/logout (via POST) e limpa o user do contexto.
-   *  Mesmo se falhar a requisição, garantimos que user = null.
-   */
+  // 3) Desloga (limpa cookie e limpa contexto)
   const logout = async () => {
     setLoading(true);
     try {
-      await api.post("/auth/logout", null);  // assume que /auth/logout invalida o cookie
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
     } catch {
-      // se falhar, não bloqueamos o logout – limpamos o estado de qualquer forma
+      // ignore
     } finally {
       setUser(null);
       setLoading(false);
     }
   };
 
-  /**
-   *  setPerfilAcompanhanteID: caso em algum momento você precise gravar
-   *  perfilAcompanhanteID no estado local (por exemplo, logo após criar um novo perfil),
-   *  este método faz merge no user.
-   */
+  // 4) Quando o modal cria um perfil novo (POST /perfis), vamos injetar esse perfil no contexto:
   const setPerfilAcompanhanteID = (id: number) => {
     setUser((prev) => {
       if (!prev) return prev;
@@ -119,7 +101,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  // Assim que o AuthProvider monta, rodamos a checagem inicial de sessão:
   useEffect(() => {
     checkAuth();
   }, []);
@@ -136,12 +117,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         checkAuth,
       }}
     >
-      {loading ? <div>Carregando...</div> : children}
+      {loading ? <div>Carregando autenticação...</div> : children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) {
     throw new Error("useAuth deve ser usado dentro de um AuthProvider");
