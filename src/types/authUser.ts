@@ -6,6 +6,7 @@ export interface AuthUserResponse {
       nome: string
       email: string
       role: string
+      ativo: boolean
       abilityRules: {
         action: string
         subject: string

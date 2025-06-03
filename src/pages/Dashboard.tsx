@@ -1,3 +1,5 @@
+// src/pages/Dashboard.tsx
+
 import { useState, useEffect } from "react";
 import {
   AreaChart,
@@ -15,58 +17,36 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
-import {
-  Image as ImageIcon,
-  Video as VideoIcon,
-} from "lucide-react";
+import { Image as ImageIcon, Video as VideoIcon } from "lucide-react";
 import "../styles/dashboard.scss";
 
 import { userGetAnuncios } from "../services/anuncio/userBuscaAnuncio";
 import type { userGetAnuncioResponse } from "../types/userBuscaAnuncio";
 
+// Import do modal obrigatório de perfil e do contexto de autenticação
+import { ModalObrigatorioPerfil } from "../components/ModalObrigatorioPerfil/ModalObrigatorioPerfil";
+import { useAuth } from "../context/AuthContext";
+
 export default function Dashboard() {
-  // estados das métricas
+  // 1) Consome o contexto de autenticação
+  const { user, isAuthenticated, loading: authLoading, checkAuth } = useAuth();
+
+  // 2) Estados das métricas
   const [totalAds, setTotalAds] = useState(0);
   const [activeAds, setActiveAds] = useState(0);
   const [totalPhotos, setTotalPhotos] = useState(0);
   const [totalVideos, setTotalVideos] = useState(0);
 
-  // dados mockados para gráficos (pode vir de API depois)
-  const viewsData = [
-    { day: "01", views: 120 },
-    { day: "05", views: 240 },
-    { day: "10", views: 180 },
-    { day: "15", views: 300 },
-    { day: "20", views: 260 },
-    { day: "25", views: 320 },
-    { day: "30", views: 290 },
-  ];
+  // 3) Controle local para exibir o modal
+  const [showModal, setShowModal] = useState(false);
 
-  const sourceData = [
-    { name: "Orgânico", value: 500 },
-    { name: "Ads", value: 300 },
-    { name: "Indicação", value: 200 },
-  ];
-
-  const cityData = [
-    { city: "São Paulo", visits: 400 },
-    { city: "Rio de Janeiro", visits: 320 },
-    { city: "Belo Horizonte", visits: 180 },
-    { city: "Curitiba", visits: 220 },
-    { city: "Porto Alegre", visits: 150 },
-  ];
-
-  const COLORS = ["#27df6d", "#6a64d6", "#f3bb4b"];
-
+  // 4) Carrega métricas de anúncios
   useEffect(() => {
     async function loadMetrics() {
       try {
         const data: userGetAnuncioResponse[] = await userGetAnuncios();
-
         setTotalAds(data.length);
-        // Sem campo status definido, consideramos todos como ativos
         setActiveAds(data.length);
-
         const photosCount = data.reduce(
           (sum, item) => sum + (item.fotos?.length || 0),
           0
@@ -84,11 +64,74 @@ export default function Dashboard() {
     loadMetrics();
   }, []);
 
+  // 5) Decide se deve mostrar o modal (com base em user.ativo)
+  useEffect(() => {
+    // Aguarda contexto terminar de carregar
+    if (authLoading) return;
+
+    // Se não estiver autenticado ou user for null, fecha modal
+    if (!isAuthenticated || !user) {
+      setShowModal(false);
+      return;
+    }
+
+    // Se o usuário existir, mostra modal apenas se user.ativo === false
+    setShowModal(user.ativo === false);
+  }, [user, isAuthenticated, authLoading]);
+
+  // 5.a) Logs para debugar no console
+  useEffect(() => {
+    console.log("[Dashboard] isAuthenticated:", isAuthenticated);
+    console.log("[Dashboard] user:", user);
+    console.log("[Dashboard] showModal:", showModal);
+  }, [isAuthenticated, user, showModal]);
+
+  // 6) Callback quando o usuário clica em “Salvar” no modal
+  const handleSaveProfile = async (data: {
+    descricao: string;
+    cep: string;
+    cidade: string;
+  }) => {
+    try {
+      console.log("[Dashboard] Salvando perfil no backend:", data);
+
+      // Chama PUT /users/me/profile para enviar descrição/cep/cidade
+      await fetch("https://api.buzzara.com.br/users/me/profile", {
+        method: "PUT",
+        credentials: "include", // caso use cookie de autenticação
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      // Depois de atualizar no back, chama checkAuth() para buscar /auth/me -> agora user.ativo deve ser true
+      await checkAuth();
+
+      // Fecha o modal
+      setShowModal(false);
+    } catch (err) {
+      console.error("Erro ao salvar perfil:", err);
+      alert("Não foi possível salvar o perfil. Tente novamente.");
+    }
+  };
+
+  // 7) Enquanto o contexto de autenticação estiver carregando, exibe “Carregando usuário…”
+  if (authLoading) {
+    return <div>Carregando usuário...</div>;
+  }
+
   return (
     <div className="dashboard-container">
+      {/* Exibe ModalObrigatorioPerfil se:
+          • isAuthenticated === true
+          • user existir
+          • user.ativo === false */}
+      {isAuthenticated && user && user.ativo === false && (
+        <ModalObrigatorioPerfil isOpen={showModal} onSave={handleSaveProfile} />
+      )}
+
+      {/* Conteúdo do Dashboard */}
       <h1>Dashboard de Anúncios</h1>
 
-      {/* Cartões de Métricas */}
       <div className="card-grid">
         <div className="card">
           <h3>Total de Anúncios</h3>
@@ -112,14 +155,21 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Gráficos */}
       <div className="chart-grid">
         {/* Visualizações por Dia */}
         <div className="chart-card" key="views">
           <h3>Visualizações por Dia</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart
-              data={viewsData}
+              data={[
+                { day: "01", views: 120 },
+                { day: "05", views: 240 },
+                { day: "10", views: 180 },
+                { day: "15", views: 300 },
+                { day: "20", views: 260 },
+                { day: "25", views: 320 },
+                { day: "30", views: 290 },
+              ]}
               margin={{ top: 20, right: 20, left: 0, bottom: 0 }}
             >
               <defs>
@@ -139,7 +189,10 @@ export default function Dashboard() {
                 axisLine={{ stroke: "#6272a4" }}
               />
               <Tooltip
-                contentStyle={{ backgroundColor: "#282a36", border: "1px solid #6272a4" }}
+                contentStyle={{
+                  backgroundColor: "#282a36",
+                  border: "1px solid #6272a4",
+                }}
                 labelStyle={{ color: "#f8f8f2" }}
                 itemStyle={{ color: "#50fa7b" }}
               />
@@ -169,21 +222,30 @@ export default function Dashboard() {
                 wrapperStyle={{ color: "#f8f8f2" }}
               />
               <Pie
-                data={sourceData}
+                data={[
+                  { name: "Orgânico", value: 500 },
+                  { name: "Ads", value: 300 },
+                  { name: "Indicação", value: 200 },
+                ]}
                 dataKey="value"
                 nameKey="name"
                 cx="40%"
                 cy="50%"
                 outerRadius={80}
                 labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) =>
+                  `${name}: ${(percent * 100).toFixed(0)}%`
+                }
               >
-                {sourceData.map((entry, index) => (
-                  <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                {["#27df6d", "#6a64d6", "#f3bb4b"].map((color, index) => (
+                  <Cell key={index} fill={color} />
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{ backgroundColor: "#282a36", border: "1px solid #6272a4" }}
+                contentStyle={{
+                  backgroundColor: "#282a36",
+                  border: "1px solid #6272a4",
+                }}
                 itemStyle={{ color: "#ffb86c" }}
               />
             </PieChart>
@@ -194,7 +256,16 @@ export default function Dashboard() {
         <div className="chart-card" key="cities">
           <h3>Top Cidades</h3>
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={cityData} margin={{ top: 40, right: 20, left: 0, bottom: 0 }}>
+            <BarChart
+              data={[
+                { city: "São Paulo", visits: 400 },
+                { city: "Rio de Janeiro", visits: 320 },
+                { city: "Belo Horizonte", visits: 180 },
+                { city: "Curitiba", visits: 220 },
+                { city: "Porto Alegre", visits: 150 },
+              ]}
+              margin={{ top: 40, right: 20, left: 0, bottom: 0 }}
+            >
               <CartesianGrid stroke="#44475a" strokeDasharray="4 4" />
               <XAxis
                 dataKey="city"
@@ -207,11 +278,19 @@ export default function Dashboard() {
               />
               <YAxis tick={{ fill: "#f8f8f2" }} axisLine={{ stroke: "#6272a4" }} />
               <Tooltip
-                contentStyle={{ backgroundColor: "#282a36", border: "1px solid #6272a4" }}
+                contentStyle={{
+                  backgroundColor: "#282a36",
+                  border: "1px solid #6272a4",
+                }}
                 itemStyle={{ color: "#8be9fd" }}
               />
               <Bar dataKey="visits" barSize={40} radius={[6, 6, 0, 0]}>
-                <LabelList dataKey="visits" position="top" fill="#f8f8f2" fontSize={12} />
+                <LabelList
+                  dataKey="visits"
+                  position="top"
+                  fill="#f8f8f2"
+                  fontSize={12}
+                />
               </Bar>
             </BarChart>
           </ResponsiveContainer>

@@ -58,7 +58,6 @@ export default function Login() {
       <div
         className="login-left"
         style={{
-          /* aqui a variável já contém a URL correta (em dev e produção) */
           backgroundImage: `url(${images[currentIndex]})`,
           backgroundSize: "cover",
           backgroundPosition: "center",

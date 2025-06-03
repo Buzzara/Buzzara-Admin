@@ -10,6 +10,7 @@ export interface UserLoginParams {
       id: number
       nome: string
       email: string
+      ativo: boolean
       role: string
       abilityRules: {
         action: string

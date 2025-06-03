@@ -11,9 +11,12 @@ export interface UserProfile {
   cpf: string
   genero: string
   validationToken: string
+  localizacao: string
+  descricao: string
   dataNascimento: string         
   validationTokenExpiration: string
   ativo: boolean
+  perfilAcompanhanteID?: number;
   role: string
   fotoPerfilUrl: string | null
   fotoCapaUrl: string | null
