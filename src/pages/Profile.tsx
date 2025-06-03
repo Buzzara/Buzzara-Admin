@@ -1,5 +1,3 @@
-// src/pages/Profile.tsx
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ProfileCard from "../components/ProfileCard/ProfileCard";
@@ -20,16 +18,15 @@ import { useAuth } from "../hooks/useAuth";
 import { alterarSenha } from "../services/login/userAlterarSenhaLogado";
 import type {
   AlterarSenhaDTO,
-  ApiResponse,
 } from "../types/userAlterarSenhaLogado";
 
 import api from "../services/api";
 import axios from "axios";
 
-type ValidationErrorResponse = {
+interface ValidationErrorResponse {
   message?: string;
-  errors: Record<string, string[]>;
-};
+  errors?: Record<string, string[]>;
+}
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -77,7 +74,10 @@ const Profile: React.FC = () => {
         setCoverUrl(uData.fotoCapaUrl ?? undefined);
         setTelefone(uData.telefone ?? "");
 
-        const { data: allPerfis } = await api.get<PerfilAcompanhanteResponse[]>("/perfis/all", { withCredentials: true });
+        const { data: allPerfis } = await api.get<PerfilAcompanhanteResponse[]>(
+          "/perfis/all",
+          { withCredentials: true }
+        );
         const meuPerfil = allPerfis.find((p) => p.usuarioID === uData.usuarioID) ?? null;
         setPerfilAcompanhante(meuPerfil);
 
@@ -105,7 +105,8 @@ const Profile: React.FC = () => {
   };
 
   const handleSavePhotos = async () => {
-    if (!user || (!profileFile && !coverFile)) return setUploadError("Selecione ao menos uma imagem.");
+    if (!user || (!profileFile && !coverFile))
+      return setUploadError("Selecione ao menos uma imagem.");
 
     setUploadError("");
     setUploadLoading(true);
@@ -120,7 +121,8 @@ const Profile: React.FC = () => {
       setCoverFile(null);
     } catch (err) {
       let msg = "Erro no upload das fotos.";
-      if (axios.isAxiosError(err) && err.response?.data?.message) msg = err.response.data.message;
+      if (axios.isAxiosError(err) && err.response?.data?.message)
+        msg = err.response.data.message;
       setUploadError(msg);
       console.error("[Profile] Erro no upload de fotos:", err);
     } finally {
@@ -151,14 +153,17 @@ const Profile: React.FC = () => {
         ultimoIP: perfilAcompanhante.ultimoIP ?? "0.0.0.0",
       };
 
-      await atualizarPerfilAcompanhante(perfilAcompanhante.perfilAcompanhanteID, payload);
+      await atualizarPerfilAcompanhante(
+        perfilAcompanhante.perfilAcompanhanteID,
+        payload
+      );
       setInfoSuccess("Informações atualizadas com sucesso!");
     } catch (err) {
       let msg = "Erro ao salvar informações.";
       if (axios.isAxiosError(err) && err.response?.data) {
-        const body = err.response.data as { title?: string; errors?: Record<string, string[]> };
+        const body = err.response.data as ValidationErrorResponse;
         if (body.errors) msg = Object.values(body.errors).flat().join("; ");
-        else if (body.title) msg = body.title;
+        else if (body.message) msg = body.message;
       } else if (err instanceof Error) {
         msg = err.message;
       }
@@ -196,26 +201,41 @@ const Profile: React.FC = () => {
       }
     } catch (err: unknown) {
       console.error("[Profile] Erro ao chamar alterarSenha:", err);
+
       if (axios.isAxiosError(err)) {
-        const data = err.response?.data as ApiResponse | ValidationErrorResponse;
-        if (Array.isArray((data as any).errors)) setErrors((data as any).errors);
-        else if ((data as any).errors) setErrors(Object.values((data as any).errors).flat());
-        else if ((data as any).message) setErrors([(data as any).message]);
-        else setErrors(["Erro ao atualizar senha."]);
+        const data = err.response?.data as ValidationErrorResponse;
+        if (data.errors) {
+          const allErrors = Object.values(data.errors).flat();
+          setErrors(allErrors);
+        } else if (data.message) {
+          setErrors([data.message]);
+        } else {
+          setErrors(["Erro ao atualizar senha."]);
+        }
       } else {
         setErrors(["Erro ao atualizar senha."]);
       }
     }
   };
 
-  if (authLoading || loadingPerfil) return <div className="profile-page">Carregando perfil...</div>;
+  if (authLoading || loadingPerfil)
+    return <div className="profile-page">Carregando perfil...</div>;
 
-  if (perfilError) return <div className="profile-page"><p style={{ color: "red" }}>{perfilError}</p></div>;
+  if (perfilError)
+    return (
+      <div className="profile-page">
+        <p style={{ color: "red" }}>{perfilError}</p>
+      </div>
+    );
 
   if (!userProfile || (!perfilAcompanhante && !userProfile.descricao && !userProfile.localizacao)) {
     return (
       <div className="profile-page">
-        <p>Você ainda não possui um perfil de acompanhante.<br />Preencha o formulário inicial para criar seu perfil.</p>
+        <p>
+          Você ainda não possui um perfil de acompanhante.
+          <br />
+          Preencha o formulário inicial para criar seu perfil.
+        </p>
       </div>
     );
   }
@@ -244,17 +264,36 @@ const Profile: React.FC = () => {
 
         <div className="form-group">
           <label htmlFor="description">Descrição</label>
-          <textarea id="description" value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={4} />
+          <textarea
+            id="description"
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            rows={4}
+          />
         </div>
         <div className="form-group">
           <label htmlFor="location">Localização</label>
-          <input id="location" type="text" value={localizacao} onChange={(e) => setLocalizacao(e.target.value)} />
+          <input
+            id="location"
+            type="text"
+            value={localizacao}
+            onChange={(e) => setLocalizacao(e.target.value)}
+          />
         </div>
         <div className="form-group">
           <label htmlFor="phone">Telefone</label>
-          <input id="phone" type="tel" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+          <input
+            id="phone"
+            type="tel"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
+          />
         </div>
-        <button className="btn-save-info" onClick={handleSaveInfo} disabled={infoLoading}>
+        <button
+          className="btn-save-info"
+          onClick={handleSaveInfo}
+          disabled={infoLoading}
+        >
           {infoLoading ? "Salvando..." : "Salvar Informações"}
         </button>
       </section>
@@ -264,24 +303,50 @@ const Profile: React.FC = () => {
         <p>Altere sua senha e gerencie configurações de segurança.</p>
 
         <div className="form-messages">
-          {errors.map((err, i) => <div key={i} className="message error">{err}</div>)}
-          {successMessage && <div className="message success">{successMessage}</div>}
+          {errors.map((err, i) => (
+            <div key={i} className="message error">
+              {err}
+            </div>
+          ))}
+          {successMessage && (
+            <div className="message success">{successMessage}</div>
+          )}
         </div>
 
         <form className="security-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="oldPassword">Senha Atual</label>
-            <input type="password" id="oldPassword" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} required />
+            <input
+              type="password"
+              id="oldPassword"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              required
+            />
           </div>
           <div className="form-group">
             <label htmlFor="newPassword">Nova Senha</label>
-            <input type="password" id="newPassword" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+            <input
+              type="password"
+              id="newPassword"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
           </div>
           <div className="form-group">
             <label htmlFor="confirmNewPassword">Confirmar Nova Senha</label>
-            <input type="password" id="confirmNewPassword" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} required />
+            <input
+              type="password"
+              id="confirmNewPassword"
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+              required
+            />
           </div>
-          <button type="submit" className="btn-update-password">Atualizar Senha</button>
+          <button type="submit" className="btn-update-password">
+            Atualizar Senha
+          </button>
         </form>
       </section>
     </div>
