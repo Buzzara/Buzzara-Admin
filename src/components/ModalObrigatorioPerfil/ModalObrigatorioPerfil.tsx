@@ -7,6 +7,7 @@ import type {
   CreatePerfilRequest,
   CreatePerfilResponse,
 } from "../../types/useCriarPerfilAcompanhante";
+import "./ModalObrigatorioPerfil.scss"; 
 
 interface ModalObrigatorioPerfilProps {
   isOpen: boolean;
