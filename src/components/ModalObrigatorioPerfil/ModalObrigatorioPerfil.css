@@ -1,0 +1,100 @@
+/* src/components/ModalObrigatorioPerfil.scss */
+/* O overlay agora cobre toda a viewport (100vw x 100vh), tem pointer-events ativado
+   e z-index elevado para ficar acima de qualquer outro elemento (como a sidebar). */
+.profile-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw; /* garante cobertura total da largura da viewport */
+  height: 100vh; /* garante cobertura total da altura da viewport */
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* valor elevado para ficar acima da sidebar */
+  pointer-events: auto; /* intercepta todos os cliques embaixo do overlay */
+}
+
+.profile-modal {
+  background-color: #fff;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.profile-modal .modal-header {
+  padding: 1rem 1.5rem;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+}
+.profile-modal .modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+}
+.profile-modal .modal-body {
+  padding: 1rem 1.5rem;
+  flex: 1;
+}
+.profile-modal .modal-body .form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+.profile-modal .modal-body .form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #444;
+}
+.profile-modal .modal-body .form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+.profile-modal .modal-body .form-group textarea:focus {
+  outline: none;
+  border-color: #666;
+}
+.profile-modal .modal-body .form-group input[type=text] {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+.profile-modal .modal-body .form-group input[type=text]:focus {
+  outline: none;
+  border-color: #666;
+}
+.profile-modal .modal-body .form-group .error-text {
+  margin-top: 0.25rem;
+  color: #d9534f;
+  font-size: 0.875rem;
+}
+.profile-modal .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem;
+  background-color: #f5f5f5;
+  border-top: 1px solid #ddd;
+}
+.profile-modal .modal-footer .btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.profile-modal .modal-footer .btn.btn-primary {
+  background-color: #007bff;
+  color: #fff;
+}
+.profile-modal .modal-footer .btn.btn-primary:hover {
+  background-color: #006ae0;
+}/*# sourceMappingURL=ModalObrigatorioPerfil.css.map */

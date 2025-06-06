@@ -4,21 +4,19 @@ import ProfileCard from "../components/ProfileCard/ProfileCard";
 import "../styles/profile.scss";
 
 import {
-  uploadUserPhotos,
+  atualizarFotoDePerfil,
   PhotoUploadResponse,
-} from "../services/profile/usuario/userUploadFotosPerfil";
-import { fetchCurrentUserProfile } from "../services/profile/usuario/userGetUsuario";
-import { atualizarPerfilAcompanhante } from "../services/profile/acompanhante/atualizarInformacaoPerfilAcompanhante";
+} from "../services/usuario/atualizarFotoDePerfil";
+import { buscarUsuario } from "../services/usuario/buscarUsuario";
+import { atualizarPerfilAcompanhante } from "../services/acompanhante/atualizarInformacaoPerfilAcompanhante";
 
-import type { UserProfile } from "../types/userProfile";
+import type { UserProfile } from "../types/usuario/userProfile";
 import type { AtualizarPerfilAcompanhanteDto } from "../types/perfilAcompanhante/useAtualizarInformacaoPerfilAcompanhante";
-import type { PerfilAcompanhanteResponse } from "../types/usePerfilAcompanhante";
+import type { BuscarPerfilAcompanhanteResponse } from "../types/perfilAcompanhante/useBuscarPerfilAcompanhante";
 
 import { useAuth } from "../hooks/useAuth";
-import { alterarSenha } from "../services/login/userAlterarSenhaLogado";
-import type {
-  AlterarSenhaDTO,
-} from "../types/userAlterarSenhaLogado";
+import { alterarSenhaUsuarioLogado } from "../services/senha/alterarSenhaUsuarioLogado";
+import type { AlterarSenhaDTO } from "../types/senha/userAlterarSenhaLogado";
 
 import api from "../services/api";
 import axios from "axios";
@@ -34,8 +32,10 @@ const Profile: React.FC = () => {
 
   const [loadingPerfil, setLoadingPerfil] = useState(true);
   const [perfilError, setPerfilError] = useState<string>("");
+
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [perfilAcompanhante, setPerfilAcompanhante] = useState<PerfilAcompanhanteResponse | null>(null);
+  const [perfilAcompanhante, setPerfilAcompanhante] =
+    useState<BuscarPerfilAcompanhanteResponse | null>(null);
 
   const [profileUrl, setProfileUrl] = useState<string | undefined>(undefined);
   const [coverUrl, setCoverUrl] = useState<string | undefined>(undefined);
@@ -66,26 +66,37 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     async function loadProfile() {
-      if (!user) return setLoadingPerfil(false);
+      if (!user) {
+        setLoadingPerfil(false);
+        return;
+      }
+
       try {
-        const uData: UserProfile = await fetchCurrentUserProfile();
+        const uData: UserProfile = await buscarUsuario();
         setUserProfile(uData);
         setProfileUrl(uData.fotoPerfilUrl ?? undefined);
         setCoverUrl(uData.fotoCapaUrl ?? undefined);
-        setTelefone(uData.telefone ?? "");
 
-        const { data: allPerfis } = await api.get<PerfilAcompanhanteResponse[]>(
-          "/perfis/all",
-          { withCredentials: true }
-        );
-        const meuPerfil = allPerfis.find((p) => p.usuarioID === uData.usuarioID) ?? null;
+        const { data: allPerfis } = await api.get<
+          BuscarPerfilAcompanhanteResponse[]
+        >("/perfis/all", { withCredentials: true });
+        const meuPerfil =
+          allPerfis.find((p) => p.usuarioID === uData.usuarioID) ?? null;
         setPerfilAcompanhante(meuPerfil);
+
+        if (meuPerfil?.telefone) {
+          setTelefone(meuPerfil.telefone);
+        } else {
+          setTelefone(uData.telefone ?? "");
+        }
 
         setDescricao(meuPerfil?.descricao ?? uData.descricao ?? "");
         setLocalizacao(meuPerfil?.localizacao ?? uData.localizacao ?? "");
       } catch (err) {
         console.error("[Profile] Erro ao carregar perfil completo:", err);
-        setPerfilError("Não foi possível carregar seu perfil. Tente recarregar a página.");
+        setPerfilError(
+          "Não foi possível carregar seu perfil. Tente recarregar a página."
+        );
       } finally {
         setLoadingPerfil(false);
       }
@@ -99,30 +110,41 @@ const Profile: React.FC = () => {
     setProfileFile(file);
     setProfileUrl(URL.createObjectURL(file));
   };
+
   const handleCoverSelect = (file: File) => {
     setCoverFile(file);
     setCoverUrl(URL.createObjectURL(file));
   };
 
   const handleSavePhotos = async () => {
-    if (!user || (!profileFile && !coverFile))
-      return setUploadError("Selecione ao menos uma imagem.");
+    if (!user || (!profileFile && !coverFile)) {
+      setUploadError("Selecione ao menos uma imagem.");
+      return;
+    }
 
     setUploadError("");
     setUploadLoading(true);
+
     try {
-      const result: PhotoUploadResponse = await uploadUserPhotos(user.id, {
+      const result: PhotoUploadResponse = await atualizarFotoDePerfil(user.id, {
         profilePhoto: profileFile ?? undefined,
         coverPhoto: coverFile ?? undefined,
       });
-      if (result.fotoPerfilUrl) setProfileUrl(result.fotoPerfilUrl);
-      if (result.fotoCapaUrl) setCoverUrl(result.fotoCapaUrl);
+
+      if (result.fotoPerfilUrl) {
+        setProfileUrl(result.fotoPerfilUrl);
+      }
+      if (result.fotoCapaUrl) {
+        setCoverUrl(result.fotoCapaUrl);
+      }
+
       setProfileFile(null);
       setCoverFile(null);
     } catch (err) {
       let msg = "Erro no upload das fotos.";
-      if (axios.isAxiosError(err) && err.response?.data?.message)
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
         msg = err.response.data.message;
+      }
       setUploadError(msg);
       console.error("[Profile] Erro no upload de fotos:", err);
     } finally {
@@ -149,7 +171,8 @@ const Profile: React.FC = () => {
         tarifa: perfilAcompanhante.tarifa ?? 0,
         telefone: telefone ?? perfilAcompanhante.telefone,
         estaOnline: perfilAcompanhante.estaOnline ?? true,
-        ultimoAcesso: perfilAcompanhante.ultimoAcesso ?? new Date().toISOString(),
+        ultimoAcesso:
+          perfilAcompanhante.ultimoAcesso ?? new Date().toISOString(),
         ultimoIP: perfilAcompanhante.ultimoIP ?? "0.0.0.0",
       };
 
@@ -162,11 +185,15 @@ const Profile: React.FC = () => {
       let msg = "Erro ao salvar informações.";
       if (axios.isAxiosError(err) && err.response?.data) {
         const body = err.response.data as ValidationErrorResponse;
-        if (body.errors) msg = Object.values(body.errors).flat().join("; ");
-        else if (body.message) msg = body.message;
+        if (body.errors) {
+          msg = Object.values(body.errors).flat().join("; ");
+        } else if (body.message) {
+          msg = body.message;
+        }
       } else if (err instanceof Error) {
         msg = err.message;
       }
+
       setInfoError(msg);
       console.error("[Profile] Erro ao salvar informações pessoais:", err);
     } finally {
@@ -191,9 +218,11 @@ const Profile: React.FC = () => {
     };
 
     try {
-      const response = await alterarSenha(payload);
-      if (response.errors?.length) setErrors(response.errors);
-      else {
+      const response = await alterarSenhaUsuarioLogado(payload);
+
+      if (response.errors?.length) {
+        setErrors(response.errors);
+      } else {
         setSuccessMessage(response.message ?? "Senha alterada com sucesso!");
         setOldPassword("");
         setNewPassword("");
@@ -218,17 +247,22 @@ const Profile: React.FC = () => {
     }
   };
 
-  if (authLoading || loadingPerfil)
+  if (authLoading || loadingPerfil) {
     return <div className="profile-page">Carregando perfil...</div>;
+  }
 
-  if (perfilError)
+  if (perfilError) {
     return (
       <div className="profile-page">
         <p style={{ color: "red" }}>{perfilError}</p>
       </div>
     );
+  }
 
-  if (!userProfile || (!perfilAcompanhante && !userProfile.descricao && !userProfile.localizacao)) {
+  if (
+    !userProfile ||
+    (!perfilAcompanhante && !userProfile.descricao && !userProfile.localizacao)
+  ) {
     return (
       <div className="profile-page">
         <p>
@@ -271,6 +305,7 @@ const Profile: React.FC = () => {
             rows={4}
           />
         </div>
+
         <div className="form-group">
           <label htmlFor="location">Localização</label>
           <input
@@ -280,6 +315,7 @@ const Profile: React.FC = () => {
             onChange={(e) => setLocalizacao(e.target.value)}
           />
         </div>
+
         <div className="form-group">
           <label htmlFor="phone">Telefone</label>
           <input
@@ -289,6 +325,7 @@ const Profile: React.FC = () => {
             onChange={(e) => setTelefone(e.target.value)}
           />
         </div>
+
         <button
           className="btn-save-info"
           onClick={handleSaveInfo}
@@ -324,6 +361,7 @@ const Profile: React.FC = () => {
               required
             />
           </div>
+
           <div className="form-group">
             <label htmlFor="newPassword">Nova Senha</label>
             <input
@@ -334,6 +372,7 @@ const Profile: React.FC = () => {
               required
             />
           </div>
+
           <div className="form-group">
             <label htmlFor="confirmNewPassword">Confirmar Nova Senha</label>
             <input
@@ -344,6 +383,7 @@ const Profile: React.FC = () => {
               required
             />
           </div>
+
           <button type="submit" className="btn-update-password">
             Atualizar Senha
           </button>

@@ -1,0 +1,86 @@
+.photo-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.photo-page h1 {
+  text-align: left;
+  margin-bottom: 20px;
+  font-size: 2rem;
+  color: #1e1e2f;
+}
+.photo-page .photo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.photo-page .photo-card {
+  position: relative;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  aspect-ratio: 16/9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+.photo-page .photo-card:hover {
+  transform: scale(1.05);
+}
+.photo-page .photo-card img {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+.photo-page .photo-card.add-photo {
+  background-color: #1f263e;
+  cursor: pointer;
+  flex-direction: column;
+  gap: 10px;
+}
+.photo-page .photo-card.add-photo .plus-icon {
+  font-size: 48px;
+  color: #ffe500;
+  font-weight: bold;
+}
+.photo-page .photo-card.add-photo p {
+  margin: 0;
+  font-size: 1rem;
+  color: #ffffff;
+}
+.photo-page .photo-card.add-photo:hover {
+  background-color: #d5d5d5;
+}
+.photo-page .blur-section {
+  width: 100%;
+  min-height: 300px; /* Ajuste conforme o tamanho desejado */
+  border-radius: 8px;
+  background-color: #1f263e;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 20px;
+}
+.photo-page .blur-section .lock-icon {
+  margin-bottom: 12px;
+  color: #ffe500;
+  flex-shrink: 0;
+}
+.photo-page .blur-section p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #ffffff;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.4;
+}/*# sourceMappingURL=photoPage.css.map */

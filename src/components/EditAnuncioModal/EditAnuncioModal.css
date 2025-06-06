@@ -1,0 +1,140 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal.edit-modal {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 600px;
+  width: 90%;
+  position: relative;
+}
+
+.modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.modal__title {
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 1.5rem;
+}
+
+.modal__error {
+  background: #ffe6e6;
+  color: #b71c1c;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal__label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+}
+
+.modal__input,
+.modal__textarea {
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.modal__textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.modal__section {
+  margin-top: 12px;
+}
+
+.modal__section-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.modal__attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attachment {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  background: #f3f3f3;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.attachment img,
+.attachment video {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+
+.attachment.add {
+  font-size: 2rem;
+  cursor: pointer;
+  color: #888;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  line-height: 18px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.modal__submit {
+  padding: 10px;
+  background-color: #213062;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.modal__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}/*# sourceMappingURL=EditAnuncioModal.css.map */

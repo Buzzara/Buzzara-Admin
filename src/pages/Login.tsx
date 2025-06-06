@@ -1,11 +1,9 @@
-// src/pages/Login.tsx
 import "../styles/login.scss";
 import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-// importe cada banner aqui
 import banner1 from "../assets/image/banner.png";
 import banner2 from "../assets/image/banner2.png";
 import banner3 from "../assets/image/banner3.png";
@@ -19,7 +17,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // use um array de imports em vez de strings
   const images = [banner1, banner2, banner3];
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -29,7 +26,6 @@ export default function Login() {
     }
   }, [user, loading, navigate]);
 
-  // Slide de imagens
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);

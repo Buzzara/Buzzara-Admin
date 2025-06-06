@@ -18,7 +18,6 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Definir saudação conforme horário
   const [greeting, setGreeting] = useState<string>("");
   useEffect(() => {
     const hour = new Date().getHours();
@@ -27,7 +26,6 @@ export default function Sidebar() {
     else setGreeting("Boa noite");
   }, []);
 
-  // Definição de itens do menu
   const allMenu = [
     { icon: <Home size={20} />, label: "Dashboard", path: "/dashboard" },
     {
@@ -40,10 +38,8 @@ export default function Sidebar() {
     { icon: <Wrench size={20} />, label: "Suporte", path: "/suporte" },
   ];
 
-  // Se desejar filtros de permissão:
-  const menuItems = allMenu; // ou filtre conforme user?.role
+  const menuItems = allMenu;
 
-  // Logout
   const handleLogout = async () => {
     try {
       await fetch("/auth/logout", { method: "POST", credentials: "include" });
@@ -96,10 +92,8 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Sidebar fixa para desktop */}
       <aside className="sidebar sidebar--fixed">{sidebarContent}</aside>
 
-      {/* Botão hambúrguer mobile */}
       <button
         className="mobile-hamburger"
         onClick={() => setIsOpen(true)}
@@ -108,7 +102,6 @@ export default function Sidebar() {
         <Menu size={24} />
       </button>
 
-      {/* Drawer em overlay mobile */}
       <div className={`sidebar-overlay ${isOpen ? "visible" : ""}`}>
         <aside className="sidebar sidebar--drawer">
           <header className="sidebar__mobile-header">

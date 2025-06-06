@@ -1,4 +1,3 @@
-// src/pages/AnunciosPage.tsx
 import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   Edit,
@@ -12,11 +11,11 @@ import {
 import NewAnuncioModal from "../components/Anuncio/AnuncioModal";
 import EditAnuncioModal from "../components/EditAnuncioModal/EditAnuncioModal";
 
-import { userGetAnuncios } from "../services/anuncio/userBuscaAnuncio";
-import { deleteAnuncio } from "../services/anuncio/deleteAnuncio";
+import { buscarAnuncio } from "../services/anuncio/buscarAnuncio";
+import { deletarAnuncio } from "../services/anuncio/deletarAnuncio";
 
-import type { AnuncioResponse } from "../types/userAnuncio";
-import type { AnuncioEditResponse } from "../types/useEditarAnuncio";
+import type { AnuncioResponse } from "../services/anuncio/userAnuncio";
+import type { EditarAnuncioResponse } from "../types/anuncio/useEditarAnuncio";
 
 import "../styles/anunciosPage.scss";
 
@@ -157,7 +156,7 @@ const AnunciosPage: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const data = await userGetAnuncios();
+        const data = await buscarAnuncio();
         if (data.length > 0) setMeuServicoId(data[0].servicoID);
         setAnuncios(
           data.map((item) => ({
@@ -211,17 +210,16 @@ const AnunciosPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteAnuncio(Number(id));
+      await deletarAnuncio(Number(id));
       setAnuncios((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
       console.error("Erro ao deletar anúncio:", err);
     }
   };
 
-  // ao clicar em "Novo Anúncio", garantimos ter meuServicoId e então abrimos o modal
   const openNewModal = async () => {
     if (meuServicoId === null) {
-      const data = await userGetAnuncios();
+      const data = await buscarAnuncio();
       if (data.length > 0) setMeuServicoId(data[0].servicoID);
     }
     setIsNewOpen(true);
@@ -306,7 +304,6 @@ const AnunciosPage: React.FC = () => {
       {isNewOpen && (
         <NewAnuncioModal
           isOpen
-          // se ainda for null, passamos 0 e deixamos o modal lidar com isso
           servicoID={meuServicoId ?? 0}
           onClose={() => setIsNewOpen(false)}
           onSuccess={handleCreateSuccess}
@@ -333,7 +330,7 @@ const AnunciosPage: React.FC = () => {
             dataCriacao: editing.rawDate,
           }}
           onClose={() => setEditing(null)}
-          onSuccess={(upd: AnuncioEditResponse) => {
+          onSuccess={(upd: EditarAnuncioResponse) => {
             const fotosArr = upd.novasFotos ?? [];
             const videosArr = upd.novosVideos ?? [];
             const updated: Anuncio = {

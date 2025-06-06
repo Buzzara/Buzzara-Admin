@@ -1,13 +1,13 @@
 import "../styles/registro.scss";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { registrarUsuario } from "../services/login/userRegister";
-import { userRegisterParams } from "../types/userRegisterTypes";
+import { registrarNovoUsuario } from "../services/registroNovoUsuario/registrarNovoUsuario";
+import { RegistrarNovoUsuarioParams } from "../types/RegistroNovoUsuario/useRegistrarNovoUsuario";
 import { FcGoogle } from "react-icons/fc";
 
 export default function Registro() {
   const navigate = useNavigate();
-  const [formulario, setFormulario] = useState<userRegisterParams>({
+  const [formulario, setFormulario] = useState<RegistrarNovoUsuarioParams>({
     nomeCompleto: "",
     telefone: "",
     email: "",
@@ -40,19 +40,28 @@ export default function Registro() {
       return;
     }
 
-    // Converte a data para o formato ISO esperado
     const dataISO = new Date(formulario.dataNascimento).toISOString();
     const dadosParaEnviar = {
       ...formulario,
       dataNascimento: dataISO,
     };
 
+    console.log(
+      ">> [Registro] Valor atual de formulario.telefone:",
+      formulario.telefone
+    );
+    console.log(
+      ">> [Registro] Payload completo que será enviado ao backend:",
+      dadosParaEnviar
+    );
+    // ------------------------------------------------------------
+
     try {
-      await registrarUsuario(dadosParaEnviar);
+      await registrarNovoUsuario(dadosParaEnviar);
       navigate("/login");
     } catch (err) {
       setErro("Erro ao registrar. Verifique os dados.");
-      console.error(err);
+      console.error(">> [Registro] Erro na chamada registrarUsuario:", err);
     }
   }
 
@@ -107,7 +116,6 @@ export default function Registro() {
             required
           />
 
-          {/* Campo para Data de Nascimento */}
           <input
             type="date"
             name="dataNascimento"

@@ -1,0 +1,101 @@
+.support-page {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 24px;
+  font-family: "Segoe UI", sans-serif;
+  color: #333;
+}
+.support-page__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #1e88e5;
+  padding-bottom: 10px;
+}
+.support-page__header .icon-help {
+  color: #1e88e5;
+  width: 36px;
+  height: 36px;
+}
+.support-page__header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+}
+.support-page__content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+.support-page__faqs {
+  background: #91a0a8;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+.support-page__faqs h2 {
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+  color: #ffe500;
+}
+.support-page__faqs .faq-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+.support-page__faqs .faq-item:last-child {
+  border-bottom: none;
+}
+.support-page__faqs .faq-item__question {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+  color: white;
+  cursor: pointer;
+}
+.support-page__faqs .faq-item__question svg {
+  color: #ffe500;
+}
+.support-page__faqs .faq-item__answer {
+  margin-top: 10px;
+  color: white;
+  line-height: 1.5;
+}
+.support-page__whatsapp {
+  background: #91a0a8;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+.support-page__whatsapp h2 {
+  margin-bottom: 16px;
+  font-size: 1.4rem;
+  color: #ffe500;
+}
+.support-page__whatsapp .whatsapp-box {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background-color: #25d366;
+  padding: 20px 32px;
+  border-radius: 12px;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+.support-page__whatsapp .whatsapp-box svg {
+  width: 32px;
+  height: 32px;
+  color: white;
+}
+.support-page__whatsapp .whatsapp-box:hover {
+  background-color: #1da851;
+}/*# sourceMappingURL=supportPage.css.map */

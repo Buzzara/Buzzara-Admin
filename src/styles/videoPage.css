@@ -1,0 +1,93 @@
+@charset "UTF-8";
+.video-page {
+  /* Mantendo o container centralizado com largura máxima */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+  /* Grid de 4 colunas para os vídeos */
+  /* Seção inferior com efeito de vidro (glassmorphism) clicável */
+}
+.video-page h1 {
+  text-align: left;
+  margin-bottom: 20px;
+  font-size: 2rem;
+  color: #1e1e2f;
+}
+.video-page .video-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px; /* Espaço para separar da seção de vidro */
+}
+.video-page .video-card {
+  position: relative;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  aspect-ratio: 16/9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+.video-page .video-card:hover {
+  transform: scale(1.05);
+}
+.video-page .video-card video {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+.video-page .video-card.add-video {
+  background-color: #1f263e;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+.video-page .video-card.add-video .plus-icon {
+  font-size: 48px;
+  color: #ffe500;
+  font-weight: bold;
+}
+.video-page .video-card.add-video p {
+  margin: 0;
+  font-size: 1rem;
+  color: #ffffff;
+}
+.video-page .video-card.add-video:hover {
+  background-color: #d5d5d5;
+}
+.video-page .blur-section {
+  width: 100%;
+  min-height: 300px; /* Ajuste conforme o tamanho desejado */
+  border-radius: 8px;
+  background-color: #1f263e;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 20px;
+}
+.video-page .blur-section .lock-icon {
+  margin-bottom: 12px;
+  color: #ffe500;
+  flex-shrink: 0;
+}
+.video-page .blur-section p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #ffffff;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.4;
+}/*# sourceMappingURL=videoPage.css.map */

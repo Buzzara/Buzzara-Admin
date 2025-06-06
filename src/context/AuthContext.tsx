@@ -1,5 +1,3 @@
-// src/context/AuthContext.tsx
-
 import React, {
   createContext,
   useContext,
@@ -7,10 +5,10 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { userLogin } from "../services/login/userLogin";
-import { authUser } from "../services/login/authUser";
-import type { AuthUserResponse } from "../types/authUser";
-import type { UserLoginResponse } from "../types/userLoginTypes";
+import { usuariologin } from "../services/login/login";
+import { autenticacaoUsuario } from "../services/login/autenticacaoUsuario";
+import type { AutenticacaoUsuarioResponse } from "../types/login/useAutenticacaoUsuario";
+import type { LoginResponse } from "../types/login/useLogin";
 
 interface UserData {
   id: number;
@@ -19,7 +17,6 @@ interface UserData {
   ativo: boolean;
   role: string;
   abilityRules: { action: string; subject: string }[];
-  /** Este campo é exatamente o “perfilAcompanhanteID” vindo de /auth/me ou criado depois **/
   perfilAcompanhanteID?: number | null;
 }
 
@@ -43,12 +40,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // 1) Faz GET /auth/me e popula user (incluindo perfilAcompanhanteID, se existir)
   const checkAuth = async () => {
     setLoading(true);
     try {
-      const response: AuthUserResponse = await authUser();
-      // response.userData já deve vir com “perfilAcompanhanteID?” preenchido (ou null)
+      const response: AutenticacaoUsuarioResponse = await autenticacaoUsuario();
       setUser(response.userData);
     } catch (err) {
       setUser(null);
@@ -57,11 +52,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // 2) Faz login e já armazena o userData (com perfilAcompanhanteID, se o backend retornar)
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const loginResponse: UserLoginResponse = await userLogin({
+      const loginResponse: LoginResponse = await usuariologin({
         email,
         password,
       });
@@ -74,7 +68,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // 3) Desloga (limpa cookie e limpa contexto)
   const logout = async () => {
     setLoading(true);
     try {
@@ -90,7 +83,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // 4) Quando o modal cria um perfil novo (POST /perfis), vamos injetar esse perfil no contexto:
   const setPerfilAcompanhanteID = (id: number) => {
     setUser((prev) => {
       if (!prev) return prev;

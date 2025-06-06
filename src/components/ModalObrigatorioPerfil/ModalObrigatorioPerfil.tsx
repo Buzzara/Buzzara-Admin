@@ -1,22 +1,19 @@
-// src/components/ModalObrigatorioPerfil.tsx
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { createPerfil } from "../../services/profile/acompanhante/criarPerfilAcompanhante";
+import { criarPerfilAcompanhante } from "../../services/acompanhante/criarPerfilAcompanhante";
 import type {
-  CreatePerfilRequest,
-  CreatePerfilResponse,
-} from "../../types/useCriarPerfilAcompanhante";
-import "./ModalObrigatorioPerfil.scss"; 
+  CriarPerfilParams,
+  CriarPerfilResponse,
+} from "../../types/perfilAcompanhante/useCriarPerfilAcompanhante";
+import "./ModalObrigatorioPerfil.scss";
 
 interface ModalObrigatorioPerfilProps {
   isOpen: boolean;
-  /**
-   * Ao salvar, o modal chamará onSave({ descricao, cep, cidade }).
-   * O componente pai deve receber esses três campos e, tipicamente,
-   * enviar ao backend via PUT/POST. Pode retornar Promise<void> ou void.
-   */
-  onSave: (data: { descricao: string; cep: string; cidade: string }) => Promise<void> | void;
+  onSave: (data: {
+    descricao: string;
+    cep: string;
+    cidade: string;
+  }) => Promise<void> | void;
 }
 
 interface ViaCepResponse {
@@ -28,21 +25,17 @@ export const ModalObrigatorioPerfil: React.FC<ModalObrigatorioPerfilProps> = ({
   isOpen,
   onSave,
 }) => {
-  // 1) campos do formulário
   const [descricao, setDescricao] = useState("");
   const [cep, setCep] = useState("");
   const [cidade, setCidade] = useState("");
   const [loadingCidade, setLoadingCidade] = useState(false);
   const [erroCep, setErroCep] = useState<string | null>(null);
 
-  // 2) estado de saving / possível erro no POST
   const [saving, setSaving] = useState<boolean>(false);
   const [errorSalvar, setErrorSalvar] = useState<string | null>(null);
 
-  // 3) Contexto de autenticação (precisamos do user e da função para atualizar perfilAcompanhanteID)
   const { user, setPerfilAcompanhanteID } = useAuth();
 
-  // 4) Busca cidade com ViaCEP
   const buscarCidadePorCep = async (cepFormatado: string) => {
     setLoadingCidade(true);
     setErroCep(null);
@@ -67,7 +60,6 @@ export const ModalObrigatorioPerfil: React.FC<ModalObrigatorioPerfilProps> = ({
     }
   };
 
-  // 5) Quando o campo CEP perde o foco (ou usuário digitou 8 dígitos)
   const handleCepBlur = () => {
     const apenasDigitos = cep.replace(/\D/g, "");
     if (apenasDigitos.length === 8) {
@@ -78,11 +70,9 @@ export const ModalObrigatorioPerfil: React.FC<ModalObrigatorioPerfilProps> = ({
     }
   };
 
-  // 6) Quando o usuário clica em “Salvar” no modal:
   const handleSave = async () => {
     setErrorSalvar(null);
 
-    // Validações mínimas
     if (!descricao.trim()) {
       alert("Preencha a descrição do perfil.");
       return;
@@ -96,10 +86,9 @@ export const ModalObrigatorioPerfil: React.FC<ModalObrigatorioPerfilProps> = ({
       return;
     }
 
-    // Monta o payload para o backend
-    const payload: CreatePerfilRequest = {
-      perfilAcompanhanteID: 0, // 0 para novo perfil
-      usuarioID: user.id,      // ID do usuário logado
+    const payload: CriarPerfilParams = {
+      perfilAcompanhanteID: 0,
+      usuarioID: user.id,
       descricao,
       localizacao: cidade,
       tarifa: 0,
@@ -112,15 +101,13 @@ export const ModalObrigatorioPerfil: React.FC<ModalObrigatorioPerfilProps> = ({
     try {
       setSaving(true);
 
-      // Chama o serviço que faz POST /perfis
-      const response: CreatePerfilResponse = await createPerfil(payload);
+      const response: CriarPerfilResponse = await criarPerfilAcompanhante(
+        payload
+      );
 
-      // Se der certo, o backend retorna { message: "...", perfilId: <novoID> }
       const novoPerfilID = response.perfilId;
-      // Armazena esse novo ID no contexto
       setPerfilAcompanhanteID(novoPerfilID);
 
-      // Agora notificamos o componente pai, passando { descricao, cep, cidade }
       await onSave({ descricao, cep, cidade });
     } catch (err) {
       console.error("[ModalObrigatorioPerfil] Erro ao criar perfil:", err);
@@ -130,7 +117,6 @@ export const ModalObrigatorioPerfil: React.FC<ModalObrigatorioPerfilProps> = ({
     }
   };
 
-  // 7) Limpa os campos sempre que o modal reabrir
   useEffect(() => {
     if (isOpen) {
       setDescricao("");
@@ -141,12 +127,10 @@ export const ModalObrigatorioPerfil: React.FC<ModalObrigatorioPerfilProps> = ({
     }
   }, [isOpen]);
 
-  // 8) Se o modal não estiver aberto, nada é renderizado
   if (!isOpen) {
     return null;
   }
 
-  // 9) A renderização do modal propriamente dita
   return (
     <div className="profile-modal-overlay">
       <div className="profile-modal">

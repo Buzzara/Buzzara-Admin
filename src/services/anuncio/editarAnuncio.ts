@@ -1,10 +1,13 @@
-import api from "../api"
-import type { AnuncioEditParams, AnuncioEditResponse } from "../../types/useEditarAnuncio";
+import api from "../api";
+import type {
+  EditarAnuncioParams,
+  EditarAnuncioResponse,
+} from "../../types/anuncio/useEditarAnuncio";
 
-export async function updateAnuncio(
+export async function editarAnuncio(
   servicoId: number,
-  params: AnuncioEditParams
-): Promise<AnuncioEditResponse> {
+  params: EditarAnuncioParams
+): Promise<EditarAnuncioResponse> {
   const form = new FormData();
   form.append("nome", params.nome);
   form.append("descricao", params.descricao);
@@ -14,16 +17,14 @@ export async function updateAnuncio(
   form.append("disponibilidade", params.disponibilidade);
 
   if (params.novasFotos && params.novasFotos.length > 0) {
-    params.novasFotos.forEach((file) =>
-      form.append("NovasFotos", file)
-    );
+    params.novasFotos.forEach((file) => form.append("NovasFotos", file));
   }
 
   if (params.novoVideo) {
     form.append("NovoVideo", params.novoVideo);
   }
 
-  const response = await api.put<AnuncioEditResponse>(
+  const response = await api.put<EditarAnuncioResponse>(
     `/anuncios/${servicoId}`,
     form,
     {

@@ -10,9 +10,8 @@ import SupportPage from "../pages/SupportPage";
 import HistoricoComprasPage from "../pages/HistoricoComprasPage";
 
 export default function AppRoutes() {
-  const { isAuthenticated, loading } = useAuth(); // Obter isAuthenticated e loading
+  const { isAuthenticated, loading } = useAuth(); 
 
-  // Se ainda estiver carregando, não renderizar as rotas ainda
   if (loading) {
     return <div>Carregando...</div>;
   }
@@ -28,7 +27,7 @@ export default function AppRoutes() {
         path="/"
         element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}
       >
-        <Route index element={<Navigate to="/dashboard" />} /> {/* Redireciona / para /dashboard */}
+        <Route index element={<Navigate to="/dashboard" />} /> 
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="historico-de-compras" element={<HistoricoComprasPage />} />
         <Route path="profile" element={<Profile />} />
@@ -36,7 +35,6 @@ export default function AppRoutes() {
         <Route path="suporte" element={<SupportPage />} />
       </Route>
 
-      {/* Rota curinga para redirecionamento */}
       <Route
         path="*"
         element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />}

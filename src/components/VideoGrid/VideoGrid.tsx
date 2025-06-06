@@ -21,7 +21,6 @@ const VideoGrid: React.FC<VideoGridProps> = ({ videos, onSelectVideo }) => {
           onClick={() => onSelectVideo(video.id)}
         >
           <div className="plusWrapper">
-            {/* Ícone de “+” atualizado para SVG */}
             <svg
               className="plusIcon"
               xmlns="http://www.w3.org/2000/svg"

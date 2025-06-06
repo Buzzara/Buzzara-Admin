@@ -1,10 +1,11 @@
-// src/components/EditAnuncioModal/EditAnuncioModal.tsx
 import React, { useState, useEffect, ChangeEvent } from "react";
-import type { AnuncioEditResponse, AnuncioEditParams } from "../../types/useEditarAnuncio";
-import { updateAnuncio } from "../../services/anuncio/editarAnuncio";
+import type {
+  EditarAnuncioResponse,
+  EditarAnuncioParams,
+} from "../../types/anuncio/useEditarAnuncio";
+import { editarAnuncio } from "../../services/anuncio/editarAnuncio";
 import "./EditAnuncioModal.scss";
 
-// helper para nome do dia em português
 const weekdayNames = [
   "Domingo",
   "Segunda-feira",
@@ -22,9 +23,9 @@ function getWeekdayName(dateString: string): string {
 
 interface EditAnuncioModalProps {
   isOpen: boolean;
-  anuncio: AnuncioEditResponse;
+  anuncio: EditarAnuncioResponse;
   onClose: () => void;
-  onSuccess: (atualizado: AnuncioEditResponse) => void;
+  onSuccess: (atualizado: EditarAnuncioResponse) => void;
 }
 
 export default function EditAnuncioModal({
@@ -39,20 +40,17 @@ export default function EditAnuncioModal({
   const [categoria, setCategoria] = useState("");
   const [lugarEncontro, setLugarEncontro] = useState("");
 
-  // disponibilidade em inputs separados
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFim, setHoraFim] = useState("");
 
-  // até 4 fotos e 1 vídeo novos
   const [fotos, setFotos] = useState<File[]>([]);
   const [videos, setVideos] = useState<File[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // quando abrir o modal, carrega só os campos de texto e limpa datas e mídias
   useEffect(() => {
     if (!isOpen) return;
 
@@ -62,13 +60,11 @@ export default function EditAnuncioModal({
     setCategoria(anuncio.categoria);
     setLugarEncontro(anuncio.lugarEncontro);
 
-    // força selecionar novas datas/horas
     setDataInicio("");
     setDataFim("");
     setHoraInicio("");
     setHoraFim("");
 
-    // limpa mídias antigas
     setFotos([]);
     setVideos([]);
     setError(null);
@@ -77,7 +73,7 @@ export default function EditAnuncioModal({
   const onFotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const newFiles = Array.from(e.target.files);
-    setFotos(prev => {
+    setFotos((prev) => {
       const combined = [...prev, ...newFiles].slice(0, 4);
       return combined;
     });
@@ -100,7 +96,7 @@ export default function EditAnuncioModal({
       const diaFm = getWeekdayName(dataFim);
       const disponibilidade = `${diaIn} até ${diaFm}, horário: ${horaInicio} às ${horaFim}`;
 
-      const params: AnuncioEditParams = {
+      const params: EditarAnuncioParams = {
         nome,
         descricao,
         preco,
@@ -111,7 +107,7 @@ export default function EditAnuncioModal({
       if (fotos.length) params.novasFotos = fotos;
       if (videos.length) params.novoVideo = videos[0];
 
-      const updated = await updateAnuncio(anuncio.servicoID, params);
+      const updated = await editarAnuncio(anuncio.servicoID, params);
       onSuccess(updated);
       onClose();
     } catch (err: any) {
@@ -127,18 +123,19 @@ export default function EditAnuncioModal({
   return (
     <div className="modal-overlay">
       <div className="modal edit-modal">
-        <button className="modal__close" onClick={onClose}>&times;</button>
+        <button className="modal__close" onClick={onClose}>
+          &times;
+        </button>
         <h2 className="modal__title">Editar Anúncio</h2>
         {error && <div className="modal__error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="modal__form">
-          {/* Campos básicos */}
           <label className="modal__label">
             Nome
             <input
               className="modal__input"
               value={nome}
-              onChange={e => setNome(e.target.value)}
+              onChange={(e) => setNome(e.target.value)}
               required
             />
           </label>
@@ -148,7 +145,7 @@ export default function EditAnuncioModal({
             <textarea
               className="modal__textarea"
               value={descricao}
-              onChange={e => setDescricao(e.target.value)}
+              onChange={(e) => setDescricao(e.target.value)}
               required
             />
           </label>
@@ -160,7 +157,7 @@ export default function EditAnuncioModal({
               step="0.01"
               className="modal__input"
               value={preco}
-              onChange={e => setPreco(Number(e.target.value))}
+              onChange={(e) => setPreco(Number(e.target.value))}
               required
             />
           </label>
@@ -170,7 +167,7 @@ export default function EditAnuncioModal({
             <select
               className="modal__input"
               value={categoria}
-              onChange={e => setCategoria(e.target.value)}
+              onChange={(e) => setCategoria(e.target.value)}
               required
             >
               <option value="">Selecione...</option>
@@ -186,12 +183,11 @@ export default function EditAnuncioModal({
             <input
               className="modal__input"
               value={lugarEncontro}
-              onChange={e => setLugarEncontro(e.target.value)}
+              onChange={(e) => setLugarEncontro(e.target.value)}
               required
             />
           </label>
 
-          {/* Disponibilidade */}
           <div className="modal__section">
             <div className="modal__section-title">Disponibilidade</div>
             <div className="modal__availability-grid">
@@ -201,7 +197,7 @@ export default function EditAnuncioModal({
                   type="date"
                   className="modal__input"
                   value={dataInicio}
-                  onChange={e => setDataInicio(e.target.value)}
+                  onChange={(e) => setDataInicio(e.target.value)}
                   required
                 />
               </label>
@@ -211,7 +207,7 @@ export default function EditAnuncioModal({
                   type="date"
                   className="modal__input"
                   value={dataFim}
-                  onChange={e => setDataFim(e.target.value)}
+                  onChange={(e) => setDataFim(e.target.value)}
                   required
                 />
               </label>
@@ -221,7 +217,7 @@ export default function EditAnuncioModal({
                   type="time"
                   className="modal__input"
                   value={horaInicio}
-                  onChange={e => setHoraInicio(e.target.value)}
+                  onChange={(e) => setHoraInicio(e.target.value)}
                   required
                 />
               </label>
@@ -231,14 +227,13 @@ export default function EditAnuncioModal({
                   type="time"
                   className="modal__input"
                   value={horaFim}
-                  onChange={e => setHoraFim(e.target.value)}
+                  onChange={(e) => setHoraFim(e.target.value)}
                   required
                 />
               </label>
             </div>
           </div>
 
-          {/* Adicionar Fotos (até 4) */}
           <div className="modal__section">
             <div className="modal__attachments">
               {fotos.map((file, idx) => {
@@ -250,7 +245,7 @@ export default function EditAnuncioModal({
                       type="button"
                       className="remove-btn"
                       onClick={() =>
-                        setFotos(prev => prev.filter((_, i) => i !== idx))
+                        setFotos((prev) => prev.filter((_, i) => i !== idx))
                       }
                     >
                       &times;
@@ -273,7 +268,6 @@ export default function EditAnuncioModal({
             </div>
           </div>
 
-          {/* Adicionar Vídeo */}
           <div className="modal__section">
             <div className="modal__section-title">Adicionar Vídeo</div>
             <div className="modal__attachments">

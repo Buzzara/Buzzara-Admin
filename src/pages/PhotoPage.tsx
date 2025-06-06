@@ -1,9 +1,8 @@
-// src/components/PhotoPage.tsx
-import React, { useRef, useState, ChangeEvent } from 'react';
-import { useParams } from 'react-router-dom';
-import { Lock } from 'lucide-react';
-import '../styles/photoPage.scss';
-import { uploadAnuncioFoto } from '../services/anuncio/userFotoAnuncio';
+import React, { useRef, useState, ChangeEvent } from "react";
+import { useParams } from "react-router-dom";
+import { Lock } from "lucide-react";
+import "../styles/photoPage.scss";
+import { enviarFotoAnuncio } from "../services/anuncio/enviarFotoAnuncio";
 
 const MAX_PHOTOS = 4;
 
@@ -17,7 +16,11 @@ const PhotoPage: React.FC = () => {
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoUploadClick = () => {
-    console.log('⏩ handlePhotoUploadClick', { currentCount: photos.length, max: MAX_PHOTOS, uploading });
+    console.log("⏩ handlePhotoUploadClick", {
+      currentCount: photos.length,
+      max: MAX_PHOTOS,
+      uploading,
+    });
     if (photos.length < MAX_PHOTOS && !uploading) {
       photoInputRef.current?.click();
     }
@@ -25,40 +28,43 @@ const PhotoPage: React.FC = () => {
 
   const handlePhotoChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    console.log('📸 handlePhotoChange triggered', { files });
+    console.log("📸 handlePhotoChange triggered", { files });
     if (!files || files.length === 0) return;
 
     setUploading(true);
-    console.log('🔄 Iniciando upload de fotos...', { totalSelected: files.length });
+    console.log("🔄 Iniciando upload de fotos...", {
+      totalSelected: files.length,
+    });
 
     const remaining = MAX_PHOTOS - photos.length;
     const toUpload = Array.from(files).slice(0, remaining);
-    console.log(`🔢 Você pode enviar até ${remaining} arquivos. Enviando ${toUpload.length}.`);
+    console.log(
+      `🔢 Você pode enviar até ${remaining} arquivos. Enviando ${toUpload.length}.`
+    );
 
     for (const file of toUpload) {
-      console.log('➡️ enviando arquivo:', file.name, file.type, file.size);
+      console.log("➡️ enviando arquivo:", file.name, file.type, file.size);
       try {
-        const res = await uploadAnuncioFoto({ id: anuncioId, file });
-        console.log('✅ upload bem-sucedido:', res);
-        setPhotos(prev => {
+        const res = await enviarFotoAnuncio({ id: anuncioId, file });
+        console.log("✅ upload bem-sucedido:", res);
+        setPhotos((prev) => {
           const updated = [...prev, res.url];
-          console.log('📥 estado photos atualizado:', updated);
+          console.log("📥 estado photos atualizado:", updated);
           return updated;
         });
       } catch (err) {
-        console.error('❌ erro ao enviar foto:', err);
+        console.error("❌ erro ao enviar foto:", err);
       }
     }
 
-    // limpa o input pra poder reenviar o mesmo arquivo, se quiser
-    e.target.value = '';
+    e.target.value = "";
     setUploading(false);
-    console.log('🏁 uploads finalizados, uploading = false');
+    console.log("🏁 uploads finalizados, uploading = false");
   };
 
   const handlePaidPlanClick = () => {
-    console.log('🔒 tentou adicionar vídeo, redirecionar para plano pago');
-    alert('Para adicionar mais vídeos, adquira um plano pago.');
+    console.log("🔒 tentou adicionar vídeo, redirecionar para plano pago");
+    alert("Para adicionar mais vídeos, adquira um plano pago.");
   };
 
   const renderPhotoCards = () => {
@@ -74,7 +80,7 @@ const PhotoPage: React.FC = () => {
         cards.push(
           <div
             key={i}
-            className={`photo-card add-photo ${uploading ? 'disabled' : ''}`}
+            className={`photo-card add-photo ${uploading ? "disabled" : ""}`}
             onClick={handlePhotoUploadClick}
           >
             <div className="plus-icon">+</div>
@@ -90,9 +96,7 @@ const PhotoPage: React.FC = () => {
     <div className="photo-page">
       <h1>Minhas Fotos</h1>
 
-      <div className="photo-grid">
-        {renderPhotoCards()}
-      </div>
+      <div className="photo-grid">{renderPhotoCards()}</div>
 
       <div className="blur-section" onClick={handlePaidPlanClick}>
         <Lock size={32} className="lock-icon" />
@@ -107,7 +111,7 @@ const PhotoPage: React.FC = () => {
         multiple
         ref={photoInputRef}
         onChange={handlePhotoChange}
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
       />
     </div>
   );

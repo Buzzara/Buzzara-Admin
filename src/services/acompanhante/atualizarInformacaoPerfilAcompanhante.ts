@@ -1,13 +1,9 @@
-// src/types/useAtualizarPerfilAcompanhante.ts
+import api from "../api";
+import { AtualizarPerfilAcompanhanteDto } from "../../types/perfilAcompanhante/useAtualizarInformacaoPerfilAcompanhante";
 
-export interface AtualizarPerfilAcompanhanteDto {
-  perfilAcompanhanteID: number;
-  usuarioID: number;
-  descricao: string;
-  localizacao: string;
-  tarifa: number;
-  telefone: string;
-  estaOnline: boolean;
-  ultimoAcesso: string;
-  ultimoIP: string;
-}
+export const atualizarPerfilAcompanhante = async (
+  id: number,
+  payload: AtualizarPerfilAcompanhanteDto
+) => {
+  return await api.put(`/perfis/${id}`, payload, { withCredentials: true });
+};

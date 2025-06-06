@@ -10,7 +10,6 @@ export interface ProfileCardProps {
   avatarUrl?: string;
   coverUrl?: string;
 
-  // upload callbacks
   onProfileSelect: (file: File) => void;
   onCoverSelect: (file: File) => void;
   onSavePhotos: () => void;
@@ -37,7 +36,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
   return (
     <div className="profile-card">
-      {/* hidden inputs */}
       <input
         type="file"
         accept="image/*"
@@ -61,21 +59,23 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         }}
       />
 
-      {/* cover + controles */}
       <div
         className="profile-card__cover"
         style={{ backgroundImage: `url(${coverUrl})` }}
       />
 
       <button
-        className="profile-card__edit-cover"
+        type="button"
+        className="profile-card__button profile-card__edit-cover"
         onClick={() => coverRef.current?.click()}
       >
         <Pencil size={18} />
+        <span className="profile-card__icon-label">Editar Capa</span>
       </button>
 
       <button
-        className="profile-card__save-photos"
+        type="button"
+        className="profile-card__button profile-card__save-photos"
         onClick={onSavePhotos}
         disabled={profileLoading || coverLoading}
       >
@@ -84,23 +84,26 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         ) : (
           <Save size={18} />
         )}
+        <span className="profile-card__icon-label">Salvar</span>
       </button>
 
-      {/* conteúdo abaixo da capa */}
       <div className="profile-card__content">
         <div className="profile-card__avatar-container">
           <img src={avatarUrl} alt={name} className="profile-card__avatar" />
           <button
+            type="button"
             className="profile-card__edit-avatar"
             onClick={() => profileRef.current?.click()}
           >
             <Pencil size={14} />
           </button>
         </div>
+
         <div className="profile-card__info">
           <h2 className="profile-card__name">{name}</h2>
           <p className="profile-card__role">{role}</p>
         </div>
+
         {uploadError && (
           <div className="profile-card__error">{uploadError}</div>
         )}

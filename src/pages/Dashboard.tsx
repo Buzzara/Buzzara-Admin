@@ -1,5 +1,3 @@
-// src/pages/Dashboard.tsx
-
 import { useState, useEffect } from "react";
 import {
   AreaChart,
@@ -20,31 +18,25 @@ import {
 import { Image as ImageIcon, Video as VideoIcon } from "lucide-react";
 import "../styles/dashboard.scss";
 
-import { userGetAnuncios } from "../services/anuncio/userBuscaAnuncio";
-import type { userGetAnuncioResponse } from "../types/userBuscaAnuncio";
+import { buscarAnuncio } from "../services/anuncio/buscarAnuncio";
+import type { userBuscaAnuncioResponse } from "../types/anuncio/useBuscaAnuncio";
 
-// Import do modal obrigatório de perfil e do contexto de autenticação
 import { ModalObrigatorioPerfil } from "../components/ModalObrigatorioPerfil/ModalObrigatorioPerfil";
 import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
-  // 1) Consome o contexto de autenticação
   const { user, isAuthenticated, loading: authLoading, checkAuth } = useAuth();
 
-  // 2) Estados das métricas
   const [totalAds, setTotalAds] = useState(0);
   const [activeAds, setActiveAds] = useState(0);
   const [totalPhotos, setTotalPhotos] = useState(0);
   const [totalVideos, setTotalVideos] = useState(0);
-
-  // 3) Controle local para exibir o modal
   const [showModal, setShowModal] = useState(false);
 
-  // 4) Carrega métricas de anúncios
   useEffect(() => {
     async function loadMetrics() {
       try {
-        const data: userGetAnuncioResponse[] = await userGetAnuncios();
+        const data: userBuscaAnuncioResponse[] = await buscarAnuncio();
         setTotalAds(data.length);
         setActiveAds(data.length);
         const photosCount = data.reduce(
@@ -64,29 +56,23 @@ export default function Dashboard() {
     loadMetrics();
   }, []);
 
-  // 5) Decide se deve mostrar o modal (com base em user.ativo)
   useEffect(() => {
-    // Aguarda contexto terminar de carregar
     if (authLoading) return;
 
-    // Se não estiver autenticado ou user for null, fecha modal
     if (!isAuthenticated || !user) {
       setShowModal(false);
       return;
     }
 
-    // Se o usuário existir, mostra modal apenas se user.ativo === false
     setShowModal(user.ativo === false);
   }, [user, isAuthenticated, authLoading]);
 
-  // 5.a) Logs para debugar no console
   useEffect(() => {
     console.log("[Dashboard] isAuthenticated:", isAuthenticated);
     console.log("[Dashboard] user:", user);
     console.log("[Dashboard] showModal:", showModal);
   }, [isAuthenticated, user, showModal]);
 
-  // 6) Callback quando o usuário clica em “Salvar” no modal
   const handleSaveProfile = async (data: {
     descricao: string;
     cep: string;
@@ -95,18 +81,15 @@ export default function Dashboard() {
     try {
       console.log("[Dashboard] Salvando perfil no backend:", data);
 
-      // Chama PUT /users/me/profile para enviar descrição/cep/cidade
       await fetch("https://api.buzzara.com.br/users/me/profile", {
         method: "PUT",
-        credentials: "include", // caso use cookie de autenticação
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
-      // Depois de atualizar no back, chama checkAuth() para buscar /auth/me -> agora user.ativo deve ser true
       await checkAuth();
 
-      // Fecha o modal
       setShowModal(false);
     } catch (err) {
       console.error("Erro ao salvar perfil:", err);
@@ -114,22 +97,16 @@ export default function Dashboard() {
     }
   };
 
-  // 7) Enquanto o contexto de autenticação estiver carregando, exibe “Carregando usuário…”
   if (authLoading) {
     return <div>Carregando usuário...</div>;
   }
 
   return (
     <div className="dashboard-container">
-      {/* Exibe ModalObrigatorioPerfil se:
-          • isAuthenticated === true
-          • user existir
-          • user.ativo === false */}
       {isAuthenticated && user && user.ativo === false && (
         <ModalObrigatorioPerfil isOpen={showModal} onSave={handleSaveProfile} />
       )}
 
-      {/* Conteúdo do Dashboard */}
       <h1>Dashboard de Anúncios</h1>
 
       <div className="card-grid">
@@ -156,7 +133,6 @@ export default function Dashboard() {
       </div>
 
       <div className="chart-grid">
-        {/* Visualizações por Dia */}
         <div className="chart-card" key="views">
           <h3>Visualizações por Dia</h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -209,7 +185,6 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Origem das Visitas */}
         <div className="chart-card" key="source">
           <h3>Origem das Visitas</h3>
           <ResponsiveContainer width="100%" height={260}>
@@ -252,7 +227,6 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Top Cidades */}
         <div className="chart-card" key="cities">
           <h3>Top Cidades</h3>
           <ResponsiveContainer width="100%" height={260}>
@@ -276,7 +250,10 @@ export default function Dashboard() {
                 textAnchor="end"
                 height={60}
               />
-              <YAxis tick={{ fill: "#f8f8f2" }} axisLine={{ stroke: "#6272a4" }} />
+              <YAxis
+                tick={{ fill: "#f8f8f2" }}
+                axisLine={{ stroke: "#6272a4" }}
+              />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "#282a36",
