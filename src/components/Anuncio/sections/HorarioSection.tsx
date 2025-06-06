@@ -27,106 +27,68 @@ const HorarioSection: React.FC<HorarioProps> = ({
   setEndHour,
   endMinute,
   setEndMinute,
-  sameEveryDay,
-  setSameEveryDay,
+
 }) => {
+  // Gerar array ["00","01",...,"23"]
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    i.toString().padStart(2, "0")
+  );
+  // Minutos fixos
+  const minutes = ["00", "15", "30", "45"];
+
   return (
-    <div
-      className="modal__section"
-      style={{
-        border: "1px solid #ccc",
-        padding: "16px",
-        marginBottom: "24px",
-        borderRadius: "4px",
-      }}
-    >
-      <h3 className="modal__section-title">Horário</h3>
-
-      {/* 1) Checkbox “24 horas” */}
-      <div
-        className="modal__subsection"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          marginBottom: "12px",
-        }}
-      >
-        <input
-          type="checkbox"
-          id="horario24h"
-          checked={horario24h}
-          onChange={(e) => setHorario24h(e.target.checked)}
-        />
-        <label htmlFor="horario24h">24 horas</label>
-      </div>
-
-      {/* 2) “Das HH:MM Até as HH:MM” */}
-      <div
-        className="modal__subsection"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          marginBottom: "12px",
-        }}
-      >
-        <span>Das</span>
+    <div className="horario-section">
+      <h3 className="horario-section__title">
+        Horário
+      </h3>
+      {/** 2) Linhas “Das HH:MM Até as HH:MM” */}
+      <div className="horario-section__row horario-section__time-range">
+        <span className="horario-section__label">Das</span>
         <select
-          className="modal__input"
+          className="horario-section__select"
           value={startHour}
           onChange={(e) => setStartHour(e.target.value)}
           disabled={horario24h}
-          style={{ width: "60px" }}
         >
-          {Array.from({ length: 24 }, (_, i) => {
-            const hh = i.toString().padStart(2, "0");
-            return (
-              <option key={hh} value={hh}>
-                {hh}
-              </option>
-            );
-          })}
+          {hours.map((hh) => (
+            <option key={hh} value={hh}>
+              {hh}
+            </option>
+          ))}
         </select>
         <select
-          className="modal__input"
+          className="horario-section__select"
           value={startMinute}
           onChange={(e) => setStartMinute(e.target.value)}
           disabled={horario24h}
-          style={{ width: "60px" }}
         >
-          {["00", "15", "30", "45"].map((mm) => (
+          {minutes.map((mm) => (
             <option key={mm} value={mm}>
               {mm}
             </option>
           ))}
         </select>
 
-        <span>Até as</span>
+        <span className="horario-section__label">Até as</span>
         <select
-          className="modal__input"
+          className="horario-section__select"
           value={endHour}
           onChange={(e) => setEndHour(e.target.value)}
           disabled={horario24h}
-          style={{ width: "60px" }}
         >
-          {Array.from({ length: 24 }, (_, i) => {
-            const hh = i.toString().padStart(2, "0");
-            return (
-              <option key={hh} value={hh}>
-                {hh}
-              </option>
-            );
-          })}
+          {hours.map((hh) => (
+            <option key={hh} value={hh}>
+              {hh}
+            </option>
+          ))}
         </select>
         <select
-          className="modal__input"
+          className="horario-section__select"
           value={endMinute}
           onChange={(e) => setEndMinute(e.target.value)}
           disabled={horario24h}
-          style={{ width: "60px" }}
         >
-          {["00", "15", "30", "45"].map((mm) => (
+          {minutes.map((mm) => (
             <option key={mm} value={mm}>
               {mm}
             </option>
@@ -134,39 +96,7 @@ const HorarioSection: React.FC<HorarioProps> = ({
         </select>
       </div>
 
-      {/* 3) Rádios “Mesmo horário todos os dias?” */}
-      <div
-        className="modal__subsection"
-        style={{ display: "flex", alignItems: "center", gap: "16px" }}
-      >
-        <span className="modal__small-label">
-          Mesmo horário todos os dias?
-        </span>
-        <label
-          style={{ display: "flex", alignItems: "center", gap: "4px" }}
-        >
-          <input
-            type="radio"
-            name="sameEveryDay"
-            value="Sim"
-            checked={sameEveryDay === "Sim"}
-            onChange={() => setSameEveryDay("Sim")}
-          />
-          Sim
-        </label>
-        <label
-          style={{ display: "flex", alignItems: "center", gap: "4px" }}
-        >
-          <input
-            type="radio"
-            name="sameEveryDay"
-            value="Não"
-            checked={sameEveryDay === "Não"}
-            onChange={() => setSameEveryDay("Não")}
-          />
-          Não
-        </label>
-      </div>
+      
     </div>
   );
 };

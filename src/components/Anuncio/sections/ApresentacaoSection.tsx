@@ -1,3 +1,4 @@
+// src/components/Anuncio/sections/ApresentacaoSection.tsx
 import React from "react";
 import InputField from "../InputField";
 
@@ -6,6 +7,10 @@ interface ApresentacaoProps {
   setNomeApresentacao: (v: string) => void;
   idadeApresentacao: string;
   setIdadeApresentacao: (v: string) => void;
+  pesoApresentacao: number | "";
+  setPesoApresentacao: (v: number | "") => void;
+  alturaApresentacao: number | "";
+  setAlturaApresentacao: (v: number | "") => void;
   tituloApresentacao: string;
   setTituloApresentacao: (v: string) => void;
   textoApresentacao: string;
@@ -17,26 +22,37 @@ const ApresentacaoSection: React.FC<ApresentacaoProps> = ({
   setNomeApresentacao,
   idadeApresentacao,
   setIdadeApresentacao,
+  pesoApresentacao,
+  setPesoApresentacao,
+  alturaApresentacao,
+  setAlturaApresentacao,
   tituloApresentacao,
   setTituloApresentacao,
   textoApresentacao,
   setTextoApresentacao,
 }) => {
-  const tituloCount = tituloApresentacao.length;
-  const textoCount = textoApresentacao.length;
 
   return (
-    <div className="modal__section">
+    <div
+      className="modal__section"
+      style={{
+        border: "1px solid #ccc",
+        padding: "25px",
+        marginBottom: "24px",
+        borderRadius: "4px",
+      }}
+    >
       <h3 className="modal__section-title">Apresentação</h3>
 
+      {/* 1) Nome */}
       <InputField
         label="Nome"
         type="text"
         value={nomeApresentacao}
         onChange={(e) => setNomeApresentacao(e.target.value)}
-        required
       />
 
+      {/* 2) Idade */}
       <label className="modal__label">
         Idade
         <select
@@ -54,6 +70,34 @@ const ApresentacaoSection: React.FC<ApresentacaoProps> = ({
         </select>
       </label>
 
+      {/* 3) Peso (kg) */}
+      <InputField
+        label="Peso (kg)"
+        type="number"
+        value={pesoApresentacao}
+        onChange={(e) =>
+          setPesoApresentacao(
+            e.target.value === "" ? "" : parseFloat(e.target.value)
+          )
+        }
+        min={0}
+        step={0.1}
+      />
+
+      <InputField
+        label="Altura (cm)"
+        type="number"
+        value={alturaApresentacao}
+        onChange={(e) =>
+          setAlturaApresentacao(
+            e.target.value === "" ? "" : parseFloat(e.target.value)
+          )
+        }
+        min={0}
+        step={0.1}
+      />
+
+      {/* 5) Título (mínimo 40 caracteres) */}
       <label className="modal__label">
         Título
         <input
@@ -62,15 +106,11 @@ const ApresentacaoSection: React.FC<ApresentacaoProps> = ({
           value={tituloApresentacao}
           onChange={(e) => setTituloApresentacao(e.target.value)}
           placeholder="Digite ao menos 40 caracteres"
-          required
         />
       </label>
-      <div style={{ marginTop: "-8px", marginBottom: "12px" }}>
-        <small style={{ color: "red" }}>
-          Você já escreveu {tituloCount} caracteres. O mínimo são 40.
-        </small>
-      </div>
+      
 
+      {/* 6) Texto (mínimo 250 caracteres) */}
       <label className="modal__label">
         Texto
         <textarea
@@ -79,14 +119,8 @@ const ApresentacaoSection: React.FC<ApresentacaoProps> = ({
           onChange={(e) => setTextoApresentacao(e.target.value)}
           placeholder="Digite um texto de apresentação (mínimo 250 caracteres)"
           rows={8}
-          required
         />
       </label>
-      <div style={{ marginTop: "-8px", marginBottom: "24px" }}>
-        <small style={{ color: "red" }}>
-          Você já escreveu {textoCount} caracteres. O mínimo são 250.
-        </small>
-      </div>
     </div>
   );
 };

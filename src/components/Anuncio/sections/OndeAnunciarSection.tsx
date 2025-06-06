@@ -85,70 +85,7 @@ const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
       }}
     >
       <h3 className="modal__section-title">Onde anunciar‐se</h3>
-
-      {/* 1) Você é */}
-      <div className="modal__subsection" style={{ marginBottom: "12px" }}>
-        <span className="modal__small-label">Você é</span>
-        <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
-          {(["Garota", "Trans", "Homem"] as const).map((tipo) => (
-            <button
-              key={tipo}
-              type="button"
-              className={`toggle-button ${
-                tipoUsuario === tipo ? "active" : ""
-              }`}
-              onClick={() => setTipoUsuario(tipo)}
-              style={{
-                padding: "6px 12px",
-                borderRadius: "4px",
-                border: "1px solid #007bff",
-                backgroundColor: tipoUsuario === tipo ? "#007bff" : "#fff",
-                color: tipoUsuario === tipo ? "#fff" : "#007bff",
-                cursor: "pointer",
-              }}
-            >
-              {tipo}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 2) Categoria */}
-      <div className="modal__subsection" style={{ marginBottom: "12px" }}>
-        <span className="modal__small-label">Categoria</span>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "8px",
-            marginTop: "4px",
-          }}
-        >
-          {todasCategorias.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              className={`toggle-button ${
-                categoriasSelecionadas.includes(cat) ? "active" : ""
-              }`}
-              onClick={() => toggleCategoria(cat)}
-              style={{
-                padding: "6px 12px",
-                borderRadius: "4px",
-                border: "1px solid #007bff",
-                backgroundColor: categoriasSelecionadas.includes(cat)
-                  ? "#007bff"
-                  : "#fff",
-                color: categoriasSelecionadas.includes(cat) ? "#fff" : "#007bff",
-                cursor: "pointer",
-              }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
-
+      
       {/* 3) Pesquisa livre */}
       <div className="modal__subsection" style={{ marginBottom: "12px" }}>
         <span className="modal__small-label">
@@ -174,12 +111,11 @@ const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
         }}
       >
         <div style={{ flex: "1 1 200px" }}>
-          <InputField label="Estado" required>
+          <InputField label="Estado" >
             <select
               className="modal__input"
               value={estado}
               onChange={(e) => setEstado(e.target.value)}
-              required
             >
               <option value="">Selecione o estado</option>
               {estadosLista.map((st) => (
@@ -192,12 +128,11 @@ const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
         </div>
 
         <div style={{ flex: "1 1 200px" }}>
-          <InputField label="Cidade" required>
+          <InputField label="Cidade" >
             <select
               className="modal__input"
               value={cidade}
               onChange={(e) => setCidade(e.target.value)}
-              required
               disabled={!estado}
             >
               <option value="">

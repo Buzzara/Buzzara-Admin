@@ -1,8 +1,11 @@
+// src/components/Anuncio/NewAnuncioModal.tsx
+
 import React, { useState, useRef, useEffect } from "react";
-import api from "../../services/api";
-import { AnuncioResponse } from "../../services/anuncio/userAnuncio";
 import "../Anuncio/style/NewAnuncioModal.scss";
 import { Estado } from "../../types/localizacao/useEstado";
+
+import { criarAnuncio } from "../../services/anuncio/criarAnuncio";
+import { CriarAnuncioResponse, CriarAnuncioParams } from "../../types/anuncio/useCriarAnuncio";
 
 import OndeAnunciarSection from "./sections/OndeAnunciarSection";
 import ApresentacaoSection from "./sections/ApresentacaoSection";
@@ -11,6 +14,8 @@ import ServicosSection from "./sections/ServicosSection";
 import SobreVoceSection from "./sections/SobreVoceSection";
 import CacheSection from "./sections/CacheSection";
 import FotosVideoSection from "./sections/FotosVideoSection";
+import TdPositivosSection from "./sections/TdPositivosSection";
+
 import InputField from "./InputField";
 
 import {
@@ -34,13 +39,7 @@ interface NewAnuncioModalProps {
   isOpen: boolean;
   servicoID: number;
   onClose: () => void;
-  onSuccess: (anuncio: AnuncioResponse) => void;
-}
-
-interface CacheLinha {
-  descricao: string;
-  valor: string;
-  disabled: boolean;
+  onSuccess: (anuncio: CriarAnuncioResponse) => void;
 }
 
 const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
@@ -49,17 +48,12 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const [tipoUsuario, setTipoUsuario] = useState<"Garota" | "Trans" | "Homem">(
-    "Garota"
-  );
-  const todasCategorias = [
-    "Acompanhantes",
-    "Massagens eróticas",
-    "Videochamadas e Sexting",
-  ];
-  const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<
-    string[]
-  >(["Acompanhantes"]);
+  //
+  // ─── 1) “Onde anunciar‐se” ──────────────────────────────────────────────
+  //
+  const [tipoUsuario, setTipoUsuario] = useState<"Garota" | "Trans" | "Homem">("Garota");
+  const todasCategorias = ["Acompanhantes", "Massagens eróticas", "Videochamadas e Sexting"];
+  const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<string[]>(["Acompanhantes"]);
   const [buscaLivre, setBuscaLivre] = useState("");
   const [area, setArea] = useState("");
 
@@ -69,11 +63,17 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   const [cidadesPorEstado, setCidadesPorEstado] = useState<string[]>([]);
   const [saidasA, setSaidasA] = useState<string[]>([]);
 
+  //
+  // ─── 2) “Apresentação” ───────────────────────────────────────────────────
+  //
   const [nomeApresentacao, setNomeApresentacao] = useState("");
   const [idadeApresentacao, setIdadeApresentacao] = useState<string>("");
   const [tituloApresentacao, setTituloApresentacao] = useState("");
   const [textoApresentacao, setTextoApresentacao] = useState("");
 
+  //
+  // ─── 3) “Horário” ───────────────────────────────────────────────────────
+  //
   const [horario24h, setHorario24h] = useState(false);
   const [startHour, setStartHour] = useState("08");
   const [startMinute, setStartMinute] = useState("00");
@@ -81,13 +81,16 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   const [endMinute, setEndMinute] = useState("00");
   const [sameEveryDay, setSameEveryDay] = useState<"Sim" | "Não">("Sim");
 
-  const [servicosSelecionados, setServicosSelecionados] = useState<string[]>(
-    []
-  );
-  const [servicosEspeciaisSelecionados, setServicosEspeciaisSelecionados] =
-    useState<string[]>([]);
+  //
+  // ─── 4) “Serviços / Serviços Especiais / Lugar” ─────────────────────────
+  //
+  const [servicosSelecionados, setServicosSelecionados] = useState<string[]>([]);
+  const [servicosEspeciaisSelecionados, setServicosEspeciaisSelecionados] = useState<string[]>([]);
   const [lugarSelecionado, setLugarSelecionado] = useState<string[]>([]);
 
+  //
+  // ─── 5) “Sobre você” ────────────────────────────────────────────────────
+  //
   const [sobreVoce, setSobreVoce] = useState<{
     atendimentoA: string[];
     etnia: string;
@@ -106,8 +109,13 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
     pubis: [],
   });
 
+  //
+  // ─── 6) “R$ Cachês” e anexos ─────────────────────────────────────────────
+  //
   const [formasPagamento, setFormasPagamento] = useState<string[]>([]);
-  const [linhasCache, setLinhasCache] = useState<CacheLinha[]>(
+  const [linhasCache, setLinhasCache] = useState<
+    { descricao: string; valor: string; disabled: boolean }[]
+  >(
     Array.from({ length: 8 }).map((_, i) => ({
       descricao: i === 0 ? "1 hora" : "",
       valor: "",
@@ -119,15 +127,29 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   const [video, setVideo] = useState<File | null>(null);
   const photoSlots = 8;
 
+  //
+  // ─── 7) “Campos principais do anúncio” ───────────────────────────────────
+  //
   const [categoria, setCategoria] = useState("Acompanhante");
   const [lugarEncontro, setLugarEncontro] = useState("");
   const [idade, setIdade] = useState<number | "">("");
   const [peso, setPeso] = useState<number | "">("");
   const [altura, setAltura] = useState<number | "">("");
 
+  //
+  // ─── 8) “TD positivos” (novo estado para linkTD) ─────────────────────────
+  //
+  const [linkTD, setLinkTD] = useState<string>("");
+
+  //
+  // ─── 9) Loading / Erro ────────────────────────────────────────────────────
+  //
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  //
+  // ─── 10) Busca de Estados / Cidades (IBGE) ─────────────────────────────────
+  //
   useEffect(() => {
     const fetchEstados = async () => {
       try {
@@ -163,82 +185,92 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
     fetchCidades();
   }, [estado]);
 
+  //
+  // ─── 11) REFs para anexos ──────────────────────────────────────────────────
+  //
+  // (a tipagem “<HTMLInputElement>” basta, sem “| null” no genérico)
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
+  //
+  // ─── 12) FUNÇÃO handleSubmit (chama `criarAnuncio`) ───────────────────────
+  //
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const form = new FormData();
-      form.append("servicoID", String(servicoID));
-      form.append("tipoUsuario", tipoUsuario);
-      form.append(
-        "categoriasOndeAnunciar",
-        JSON.stringify(categoriasSelecionadas)
-      );
-      form.append("buscaLivre", buscaLivre);
-      form.append("estado", estado);
-      form.append("cidade", cidade);
-      form.append("area", area);
-      form.append("saidasA", JSON.stringify(saidasA));
+      /************************************************************************
+       *  Monta um objeto “CriarAnuncioParams” com todos os campos.         *
+       *  A função `criarAnuncio` vai converter em FormData e fazer POST.   *
+       ************************************************************************/
+      const payload: CriarAnuncioParams = {
+        servicoID,
 
-      form.append("nomeApresentacao", nomeApresentacao);
-      form.append("idadeApresentacao", idadeApresentacao);
-      form.append("tituloApresentacao", tituloApresentacao);
-      form.append("textoApresentacao", textoApresentacao);
+        // 1) Onde anunciar-se
+        tipoUsuario,
+        categoriasOndeAnunciar: categoriasSelecionadas,
+        buscaLivre,
+        estado,
+        cidade,
+        area,
+        saidasA,
 
-      form.append("horario24h", horario24h ? "true" : "false");
-      if (!horario24h) {
-        form.append("startTime", `${startHour}:${startMinute}`);
-        form.append("endTime", `${endHour}:${endMinute}`);
-      }
-      form.append("sameEveryDay", sameEveryDay);
+        // 2) Apresentação
+        nomeApresentacao,
+        idadeApresentacao,
+        tituloApresentacao,
+        textoApresentacao,
 
-      form.append("servicos", JSON.stringify(servicosSelecionados));
-      form.append(
-        "servicosEspeciais",
-        JSON.stringify(servicosEspeciaisSelecionados)
-      );
-      form.append("lugar", JSON.stringify(lugarSelecionado));
+        // 3) Horário
+        horario24h,
+        startHour: horario24h ? undefined : startHour,
+        startMinute: horario24h ? undefined : startMinute,
+        endHour: horario24h ? undefined : endHour,
+        endMinute: horario24h ? undefined : endMinute,
+        sameEveryDay,
 
-      form.append("categoria", categoria);
-      form.append("lugarEncontro", lugarEncontro);
-      if (idade !== "") form.append("idade", String(idade));
-      if (peso !== "") form.append("peso", String(peso));
-      if (altura !== "") form.append("altura", String(altura));
-      form.append("dataCriacao", new Date().toISOString());
+        // 4) Serviços / Serviços Especiais / Lugar
+        servicos: servicosSelecionados,
+        servicosEspeciais: servicosEspeciaisSelecionados,
+        lugar: lugarSelecionado,
 
-      form.append("atendimentoA", JSON.stringify(sobreVoce.atendimentoA));
-      form.append("etnia", sobreVoce.etnia);
-      form.append("cabelo", JSON.stringify(sobreVoce.cabelo));
-      form.append("estatura", JSON.stringify(sobreVoce.estatura));
-      form.append("corpo", JSON.stringify(sobreVoce.corpo));
-      form.append("seios", JSON.stringify(sobreVoce.seios));
-      form.append("pubis", JSON.stringify(sobreVoce.pubis));
+        // 5) Campos principais do anúncio
+        categoria,
+        lugarEncontro,
+        idade: idade === "" ? undefined : Number(idade),
+        peso: peso === "" ? undefined : Number(peso),
+        altura: altura === "" ? undefined : Number(altura),
+        dataCriacao: new Date().toISOString(),
 
-      form.append(
-        "cacheData",
-        JSON.stringify({
-          formasPagamento,
-          linhas: linhasCache.map(({ descricao, valor }) => ({
-            descricao,
-            valor,
-          })),
-        })
-      );
+        // 6) Sobre você
+        atendimentoA: sobreVoce.atendimentoA,
+        etnia: sobreVoce.etnia,
+        cabelo: sobreVoce.cabelo,
+        estatura: sobreVoce.estatura,
+        corpo: sobreVoce.corpo,
+        seios: sobreVoce.seios,
+        pubis: sobreVoce.pubis,
 
-      fotos.forEach((file) => form.append("Fotos", file));
-      if (video) form.append("Video", video);
+        // 7) R$ Cachês
+        formasPagamento,
+        linhasCache: linhasCache.map((lc) => ({
+          descricao: lc.descricao,
+          valor: lc.valor,
+        })),
 
-      const { data: anuncio } = await api.post<AnuncioResponse>(
-        "/anuncios",
-        form,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-      onSuccess(anuncio);
+        // 8) Fotos e Vídeo (arrays de File / File)
+        fotos,
+        video: video ?? undefined,
+
+        // 9) TD positivos
+        linkTD,
+      };
+
+      // → chama a função unificada de criação de anúncio
+      const novoAnuncio = await criarAnuncio(payload);
+      onSuccess(novoAnuncio);
       onClose();
     } catch (err: any) {
       setError(err.response?.data?.error || err.message);
@@ -248,10 +280,16 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
     }
   };
 
+  //
+  // ─── 13) Se não estiver aberto, retorna nulo ──────────────────────────────
+  //
   if (!isOpen) {
     return null;
   }
 
+  //
+  // ─── 14) Renderiza todo o modal ────────────────────────────────────────────
+  //
   return (
     <div className="modal-overlay">
       <div className="modal">
@@ -263,6 +301,7 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
 
         <div className="modal__body">
           <form className="modal__form" onSubmit={handleSubmit}>
+            {/* ========== SEÇÃO “Onde anunciar‐se” ========== */}
             <OndeAnunciarSection
               tipoUsuario={tipoUsuario}
               setTipoUsuario={setTipoUsuario}
@@ -284,6 +323,7 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
               setSaidasA={setSaidasA}
             />
 
+            {/* ========== SEÇÃO “Apresentação” ========== */}
             <ApresentacaoSection
               nomeApresentacao={nomeApresentacao}
               setNomeApresentacao={setNomeApresentacao}
@@ -295,6 +335,7 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
               setTextoApresentacao={setTextoApresentacao}
             />
 
+            {/* ========== SEÇÃO “Horário” ========== */}
             <HorarioSection
               horario24h={horario24h}
               setHorario24h={setHorario24h}
@@ -310,6 +351,7 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
               setSameEveryDay={setSameEveryDay}
             />
 
+            {/* ========== SEÇÃO “Serviços / Serviços Especiais / Lugar” ========== */}
             <ServicosSection
               valorServicos={servicosSelecionados}
               setValorServicos={setServicosSelecionados}
@@ -322,6 +364,7 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
               opcoesLugar={opcoesLugar}
             />
 
+            {/* ========== SEÇÃO “Sobre você” ========== */}
             <SobreVoceSection
               sobreVoce={sobreVoce}
               setSobreVoce={setSobreVoce}
@@ -334,6 +377,7 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
               opcoesPubis={opcoesPubis}
             />
 
+            {/* ========== SEÇÃO “R$ Cachês” ========== */}
             <CacheSection
               formasPagamento={formasPagamento}
               setFormasPagamento={setFormasPagamento}
@@ -342,57 +386,8 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
               opcoesPagamento={opcoesPagamento}
             />
 
-            <InputField
-              label="Categoria"
-              type="text"
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              required
-            />
 
-            <InputField
-              label="Lugar de Encontro"
-              type="text"
-              value={lugarEncontro}
-              onChange={(e) => setLugarEncontro(e.target.value)}
-              required
-            />
-
-            <InputField
-              label="Idade"
-              type="number"
-              value={idade}
-              onChange={(e) =>
-                setIdade(e.target.value === "" ? "" : parseInt(e.target.value))
-              }
-              required
-              min={18}
-            />
-
-            <InputField
-              label="Peso (kg)"
-              type="number"
-              value={peso}
-              onChange={(e) =>
-                setPeso(e.target.value === "" ? "" : parseFloat(e.target.value))
-              }
-              min={0}
-              step={0.1}
-            />
-
-            <InputField
-              label="Altura (cm)"
-              type="number"
-              value={altura}
-              onChange={(e) =>
-                setAltura(
-                  e.target.value === "" ? "" : parseFloat(e.target.value)
-                )
-              }
-              min={0}
-              step={0.1}
-            />
-
+            {/* ========== SEÇÃO “Fotos e Vídeo” ========== */}
             <FotosVideoSection
               fotos={fotos}
               setFotos={setFotos}
@@ -401,6 +396,12 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
               imageInputRef={imageInputRef}
               videoInputRef={videoInputRef}
               photoSlots={photoSlots}
+            />
+
+            {/* ========== SEÇÃO “TD Positivos” ========== */}
+            <TdPositivosSection
+              linkTD={linkTD}
+              setLinkTD={setLinkTD}
             />
 
             <button

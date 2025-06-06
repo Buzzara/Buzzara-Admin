@@ -1,5 +1,4 @@
-// src/services/ibgeService.ts
-import { Estado } from "../types/useEstado";
+import { Estado } from "../../types/localizacao/useEstado";
 
 export async function buscarEstadosIBGE(): Promise<Estado[]> {
   const url = import.meta.env.VITE_API_IBGE_ESTADOS!;
@@ -19,7 +18,6 @@ export async function buscarCidadesPorEstado(uf: string): Promise<string[]> {
     throw new Error("Erro ao buscar cidades IBGE");
   }
   const data = await res.json();
-  // O JSON de IBGE retorna objetos com .nome. Mapeamos apenas para string[].
   const nomes: string[] = data.map((obj: any) => obj.nome);
   return nomes;
 }

@@ -66,7 +66,15 @@ const SobreVoceSection: React.FC<SobreVoceProps> = ({
     };
 
   return (
-    <div className="modal__section">
+    <div
+      className="modal__section"
+      style={{
+        border: "1px solid #ccc",
+        padding: "25px",
+        marginBottom: "24px",
+        borderRadius: "4px",
+      }}
+    >
       <h3 className="modal__section-title">Sobre você</h3>
 
       <MultiSelectField

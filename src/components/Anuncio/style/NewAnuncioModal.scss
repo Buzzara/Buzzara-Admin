@@ -1,4 +1,10 @@
 /* src/Anuncio/NewAnuncioModal.scss */
+
+/* =========================== */
+/*    ESTILIZAÇÃO DO MODAL     */
+/* =========================== */
+
+/* Fundo semitransparente cobrindo toda a tela */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -12,12 +18,13 @@
   z-index: 1000;
 }
 
+/* Contêiner principal do modal */
 .modal {
   background: #fff;
   border-radius: 8px;
   padding: 24px 32px;
   width: 95%;
-  max-width: 640px; /* Mantido para caber bem o conteúdo */
+  max-width: 640px;
   max-height: 90vh;
   overflow-y: auto;
   box-sizing: border-box;
@@ -25,6 +32,7 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
+/* Botão de fechar (“×”) */
 .modal__close {
   position: absolute;
   top: 12px;
@@ -35,6 +43,7 @@
   cursor: pointer;
 }
 
+/* Título do modal */
 .modal__title {
   margin-bottom: 16px;
   font-size: 1.5rem;
@@ -42,12 +51,14 @@
   color: #213062;
 }
 
+/* Formulário dentro do modal */
 .modal__form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+/* Labels que envolvem inputs/textareas */
 .modal__label {
   display: flex;
   flex-direction: column;
@@ -60,6 +71,7 @@
   margin-top: 6px;
 }
 
+/* Inputs, textareas e selects básicos */
 .modal__input,
 .modal__textarea,
 .modal__label > select {
@@ -68,13 +80,7 @@
   border-radius: 4px;
   font-size: 1rem;
   transition: border-color 0.2s;
-  width: 100%; /* Todos os inputs acima ocupam 100% da largura de seu container */
-}
-
-/* Quando for select múltiplo, definimos altura fixa para parecer um dropdown único */
-.modal__input[multiple] {
-  height: 40px; /* corresponde à altura de outros selects */
-  overflow-y: auto; /* permite rolagem interna quando expandido */
+  width: 100%;
 }
 
 .modal__input:focus,
@@ -89,20 +95,34 @@
   min-height: 80px;
 }
 
+/* Quando for um <select multiple> (dropdown de múltipla seleção),
+   forçamos uma altura que combine com outros selects */
+.modal__input[multiple] {
+  height: 40px;
+  overflow-y: auto;
+}
+
+/* Seções internas do modal — pequeno espaçamento superior */
 .modal__section {
   margin-top: 12px;
 }
 
+/* Título de cada seção (ex: “Sobre você”, “R$ Cachês” etc.) */
 .modal__section-title {
   font-weight: 600;
   margin-bottom: 8px;
 }
 
 /* -------------------------------------------------- */
-/*              ESTILIZAÇÃO DE CACHÊS                 */
+/*        ESTILIZAÇÃO ESPECÍFICA DA SEÇÃO “CACHÊS”    */
 /* -------------------------------------------------- */
+/* Agora a seção “Cachês” recebe borda e fundo para ficar destacada */
 .modal__section--cache {
   margin-top: 16px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 16px;
 }
 
 .modal__section--cache .modal__section-title {
@@ -111,6 +131,7 @@
   margin-bottom: 12px;
 }
 
+/* Sub-seções dentro de “Cachês” — label, dropdown, etc. */
 .modal__subsection {
   display: flex;
   flex-direction: column;
@@ -124,12 +145,10 @@
   margin-bottom: 6px;
 }
 
-/* -------------------------------------------------- */
-/* Cabeçalho da Grid de Descrição/Valor               */
-/* -------------------------------------------------- */
+/* Cabeçalho da grid de Descrição/Valor */
 .modal__grid-header {
   display: grid;
-  grid-template-columns: 2fr 1fr; /* Descrição ocupa 2/3, valor 1/3 */
+  grid-template-columns: 2fr 1fr;
   gap: 8px;
   margin-bottom: 6px;
   font-size: 0.95rem;
@@ -138,12 +157,10 @@
 }
 
 .modal__grid-header span {
-  padding-left: 4px; /* Ligeiro espaçamento interno */
+  padding-left: 4px;
 }
 
-/* -------------------------------------------------- */
-/* Grid de Linhas de Descrição e Valor                */
-/* -------------------------------------------------- */
+/* Grid de inputs (linhas) de descrição e valor */
 .modal__grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -167,13 +184,15 @@
   border-color: #064b15;
 }
 
-/* Primeira linha (1 hora) desabilitada */
+/* Primeira linha de descrição (1 hora) vem desabilitada */
 .modal__input--descricao[disabled] {
   background-color: #f5f5f5;
   color: #666;
   cursor: not-allowed;
 }
 
+/* -------------------------------------------------- */
+/*    ESTILIZAÇÃO DE FOTOS E VÍDEO (attachments)      */
 /* -------------------------------------------------- */
 .modal__attachments {
   display: flex;
@@ -208,6 +227,8 @@
 }
 
 /* -------------------------------------------------- */
+/*           BOTÃO DE SUBMISSÃO (Criar Anúncio)       */
+/* -------------------------------------------------- */
 .modal__submit {
   padding: 10px;
   background-color: #a83906;
@@ -226,4 +247,260 @@
 .modal__submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* =============================================== */
+/*    ESTILIZAÇÃO DA SEÇÃO “HORÁRIO” (HorarioSection)  */
+/* =============================================== */
+
+/*
+  Observação: o componente HorarioSection utiliza estas classes:
+  - .horario-section
+  - .horario-section__title
+  - .horario-section__icon
+  - .horario-section__row
+  - .horario-section__checkbox, .horario-section__checkbox-input, .horario-section__checkbox-label
+  - .horario-section__time-range, .horario-section__label, .horario-section__select
+  - .horario-section__same, .horario-section__same-label, 
+    .horario-section__radio-wrapper, .horario-section__radio-input, .horario-section__radio-label
+*/
+
+.horario-section {
+  border: 1px solid #ccc;
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 24px;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 1.125rem; /* 18px */
+    color: #181717;      /* Vermelho escuro */
+  }
+
+  
+
+  &__row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  &__checkbox {
+    &-input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    &-label {
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+  }
+
+  &__time-range {
+    & .horario-section__label {
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
+    & .horario-section__select {
+      width: 60px;
+      padding: 4px;
+      font-size: 0.95rem;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      background-color: #fff;
+      color: #333;
+      cursor: pointer;
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+    & .horario-section__select:disabled {
+      background-color: #f5f5f5;
+      color: #999;
+      cursor: not-allowed;
+    }
+  }
+
+  &__same {
+    &-label {
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
+    &__radio-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    &__radio-input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    &__radio-label {
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+  }
+}
+
+/* =============================================== */
+/*    ESTILIZAÇÃO DA SEÇÃO “ÁUDIO DE APRESENTAÇÃO”   */
+/* =============================================== */
+
+.audio-section {
+  border: 1px solid #ccc;
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 24px;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.125rem; /* 18px */
+    color: #1d1c1c;      /* Vermelho escuro */
+    margin-bottom: 12px;
+  }
+
+  &__icon {
+    font-size: 1.25rem; /* 20px */
+    color: #141414;     /* Vermelho escuro */
+  }
+
+  &__text {
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    color: #333;
+  }
+
+  &__buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .audio-section__btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #28a745; /* verde */
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+  }
+
+  .audio-section__btn:hover {
+    background-color: #218838;
+  }
+
+  .audio-section__btn-icon {
+    font-size: 1.25rem;
+  }
+}
+
+/* =============================================== */
+/*    ESTILIZAÇÃO DA SEÇÃO “TD POSITIVOS”           */
+/* =============================================== */
+
+/*
+  Use exatamente “tdpositivos-section” no JSX.
+  Por exemplo:
+    <div className="modal__section tdpositivos-section">
+*/
+
+.tdpositivos-section {
+  border: 1px solid #dce2e9;   /* Azul suave */
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.tdpositivos-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tdpositivos-section__title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tdpositivos-section__icon {
+  font-size: 1.25rem; /* 20px */
+  color: #121213;     /* Azul */
+}
+
+.tdpositivos-section__title {
+  font-size: 1.125rem; /* 18px */
+  color: #141414;      /* Azul */
+  font-weight: 600;
+}
+
+/* Botão de toggle: agora usa o mesmo azul, sem nada em vermelho */
+.tdpositivos-section__toggle-btn {
+  background-color: transparent;
+  color: #007bff;      /* Azul */
+  border: 1px solid #007bff;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.tdpositivos-section__toggle-btn:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.tdpositivos-section__toggle-icon {
+  transition: transform 0.2s;
+}
+
+/* Gira o ícone quando estiver recolhido */
+.tdpositivos-section__toggle-icon--rotated {
+  transform: rotate(-90deg);
+}
+
+.tdpositivos-section__body {
+  margin-top: 12px;
+}
+
+.tdpositivos-section__text {
+  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.tdpositivos-section__input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.tdpositivos-section__input:focus {
+  outline: none;
+  border-color: #064b15;
 }

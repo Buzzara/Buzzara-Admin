@@ -43,7 +43,12 @@ const FotosVideoSection: React.FC<FotosVideoProps> = ({
   };
 
   return (
-    <div className="modal__section">
+    <div className="modal__section" style={{
+          border: "1px solid #ccc",
+          padding: "16px",
+          marginBottom: "24px",
+          borderRadius: "4px",
+        }}>
       <div className="modal__section-title">Fotos</div>
       <div className="modal__attachments">
         {Array.from({ length: photoSlots }).map((_, idx) => (
