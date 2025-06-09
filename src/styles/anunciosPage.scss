@@ -1,5 +1,5 @@
-$primary:     #1e88e5;
-$primary-d:   #1565c0;
+$primary:     #ffe500;
+$primary-d:   #ffe500;
 $text-dark:   #1e1e2f;
 $text-muted:  #000000;
 $bg-card:     #b7bcbf;
@@ -284,6 +284,21 @@ $bg-search:   #f3f6fe;
 
           &:hover {
             color: $text-dark;
+          }
+        }
+
+        a.card__btn-details {
+          margin-left: auto;
+          padding: 6px 12px;
+          background-color: $primary;
+          color: #fff;
+          border-radius: 4px;
+          font-size: 0.875rem;
+          text-decoration: none;
+          transition: background-color 0.2s;
+
+          &:hover {
+            background-color: $primary-d;
           }
         }
       }

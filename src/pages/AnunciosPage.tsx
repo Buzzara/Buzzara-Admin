@@ -110,7 +110,9 @@ const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({
             {mediaItems.map((m, idx) => (
               <div
                 key={idx}
-                className={`carousel__thumb ${idx === current ? "active" : ""}`}
+                className={`carousel__thumb ${
+                  idx === current ? "active" : ""
+                }`}
                 onClick={() => setCurrent(idx)}
               >
                 {m.type === "video" ? (
@@ -204,7 +206,9 @@ const AnunciosPage: React.FC = () => {
   };
 
   const handleEditSuccess = (updated: Anuncio) => {
-    setAnuncios((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    setAnuncios((prev) =>
+      prev.map((a) => (a.id === updated.id ? updated : a))
+    );
     setEditing(null);
   };
 
@@ -267,6 +271,10 @@ const AnunciosPage: React.FC = () => {
             ...a.fotos.map((f) => ({ type: "image" as const, url: f.url })),
             ...a.videos.map((v) => ({ type: "video" as const, url: v.url })),
           ];
+
+          // URL de detalhe via ID
+          const detailUrl = `https://www.buzzara.com.br/profile/${a.id}`;
+
           return (
             <div key={a.id} className="card">
               <div className="card__image">
@@ -285,11 +293,20 @@ const AnunciosPage: React.FC = () => {
                   <button title="Excluir" onClick={() => handleDelete(a.id)}>
                     <Trash2 size={16} color="#e53935" />
                   </button>
+                  <a
+                    href={detailUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="card__btn-details"
+                  >
+                    Ver detalhes
+                  </a>
                 </div>
               </div>
             </div>
           );
         })}
+
         {filtered.length === 0 && (
           <p className="empty">Nenhum anúncio encontrado.</p>
         )}
