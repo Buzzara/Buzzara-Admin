@@ -1,30 +1,23 @@
-// src/components/Anuncio/sections/SobreVoceSection.tsx
 import React from "react";
 import SelectField from "../SelectField";
-import { Option } from "../servicosOptions";
 import MultiSelectField from "../MultiSelectField";
+import { Option } from "../servicosOptions";
+import { MultiValue, SingleValue } from "react-select";
+
+interface SobreVoce {
+  atendimentoA: string[];
+  etnia: string;
+  cabelo: string;
+  estatura: string;
+  corpo: string;
+  seios: string;
+  pubis: string;
+  rol: string[]; // ✅ novo campo
+}
 
 interface SobreVoceProps {
-  sobreVoce: {
-    atendimentoA: string[];
-    etnia: string;
-    cabelo: string[];
-    estatura: string[];
-    corpo: string[];
-    seios: string[];
-    pubis: string[];
-  };
-  setSobreVoce: React.Dispatch<
-    React.SetStateAction<{
-      atendimentoA: string[];
-      etnia: string;
-      cabelo: string[];
-      estatura: string[];
-      corpo: string[];
-      seios: string[];
-      pubis: string[];
-    }>
-  >;
+  sobreVoce: SobreVoce;
+  setSobreVoce: React.Dispatch<React.SetStateAction<SobreVoce>>;
   opcoesAtendimentoA: Option[];
   opcoesEtnia: Option[];
   opcoesCabelo: Option[];
@@ -32,6 +25,7 @@ interface SobreVoceProps {
   opcoesCorpo: Option[];
   opcoesSeios: Option[];
   opcoesPubis: Option[];
+  opcoesRol: Option[]; // ✅ nova prop
 }
 
 const SobreVoceSection: React.FC<SobreVoceProps> = ({
@@ -44,21 +38,18 @@ const SobreVoceSection: React.FC<SobreVoceProps> = ({
   opcoesCorpo,
   opcoesSeios,
   opcoesPubis,
+  opcoesRol, // ✅ novo
 }) => {
-  // Fabrica um handler para multi-select (array de strings)
   const makeMultiHandler =
-    (key: keyof typeof sobreVoce) =>
-    (selected: React.MultiValue<{ value: string; label: string }>) => {
+    (key: keyof SobreVoce) => (selected: MultiValue<Option>) => {
       setSobreVoce((prev) => ({
         ...prev,
-        [key]: selected ? selected.map((o) => o.value) : [],
+        [key]: selected.map((o) => o.value),
       }));
     };
 
-  // Fabrica um handler para single-select (string)
   const makeSingleHandler =
-    (key: keyof typeof sobreVoce) =>
-    (selected: React.SingleValue<{ value: string; label: string }>) => {
+    (key: keyof SobreVoce) => (selected: SingleValue<Option>) => {
       setSobreVoce((prev) => ({
         ...prev,
         [key]: selected ? selected.value : "",
@@ -91,39 +82,46 @@ const SobreVoceSection: React.FC<SobreVoceProps> = ({
         onChange={makeSingleHandler("etnia")}
       />
 
-      <MultiSelectField
+      <SelectField
         label="Cabelo"
         options={opcoesCabelo}
-        values={sobreVoce.cabelo}
-        onChange={makeMultiHandler("cabelo")}
+        value={sobreVoce.cabelo}
+        onChange={makeSingleHandler("cabelo")}
       />
 
-      <MultiSelectField
+      <SelectField
         label="Estatura"
         options={opcoesEstatura}
-        values={sobreVoce.estatura}
-        onChange={makeMultiHandler("estatura")}
+        value={sobreVoce.estatura}
+        onChange={makeSingleHandler("estatura")}
       />
 
-      <MultiSelectField
+      <SelectField
         label="Corpo"
         options={opcoesCorpo}
-        values={sobreVoce.corpo}
-        onChange={makeMultiHandler("corpo")}
+        value={sobreVoce.corpo}
+        onChange={makeSingleHandler("corpo")}
       />
 
-      <MultiSelectField
+      <SelectField
         label="Seios"
         options={opcoesSeios}
-        values={sobreVoce.seios}
-        onChange={makeMultiHandler("seios")}
+        value={sobreVoce.seios}
+        onChange={makeSingleHandler("seios")}
+      />
+
+      <SelectField
+        label="Púbis"
+        options={opcoesPubis}
+        value={sobreVoce.pubis}
+        onChange={makeSingleHandler("pubis")}
       />
 
       <MultiSelectField
-        label="Púbis"
-        options={opcoesPubis}
-        values={sobreVoce.pubis}
-        onChange={makeMultiHandler("pubis")}
+        label="Rol"
+        options={opcoesRol}
+        values={sobreVoce.rol}
+        onChange={makeMultiHandler("rol")}
       />
     </div>
   );

@@ -1,13 +1,10 @@
-// src/components/Anuncio/sections/FotosVideoSection.tsx
 import React from "react";
-
 interface FotosVideoProps {
   fotos: File[];
   setFotos: React.Dispatch<React.SetStateAction<File[]>>;
   video: File | null;
   setVideo: React.Dispatch<React.SetStateAction<File | null>>;
 
-  // Agora aceitamos HTMLInputElement | null
   imageInputRef: React.RefObject<HTMLInputElement | null>;
   videoInputRef: React.RefObject<HTMLInputElement | null>;
 
@@ -43,12 +40,15 @@ const FotosVideoSection: React.FC<FotosVideoProps> = ({
   };
 
   return (
-    <div className="modal__section" style={{
-          border: "1px solid #ccc",
-          padding: "16px",
-          marginBottom: "24px",
-          borderRadius: "4px",
-        }}>
+    <div
+      className="modal__section"
+      style={{
+        border: "1px solid #ccc",
+        padding: "16px",
+        marginBottom: "24px",
+        borderRadius: "4px",
+      }}
+    >
       <div className="modal__section-title">Fotos</div>
       <div className="modal__attachments">
         {Array.from({ length: photoSlots }).map((_, idx) => (
@@ -85,7 +85,6 @@ const FotosVideoSection: React.FC<FotosVideoProps> = ({
         </div>
       </div>
 
-      {/* Inputs ocultos */}
       <input
         ref={imageInputRef}
         type="file"

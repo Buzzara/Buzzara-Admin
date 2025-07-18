@@ -1,14 +1,11 @@
 export interface CriarAnuncioParams {
+  id?: number;
   nome: string;
   descricao: string;
-  preco: number;
-  categoria:
-    | "Acompanhante"
-    | "Mensagens Eróticas"
-    | "Vídeo Chamadas"
-    | "Sexting";
-  lugarEncontro: string;
-  disponibilidade: string;
+  saidas: string;
+  lugarEncontro: string[];       // agora array
+  servicoPrestado: string;
+  servicoEspecial: string;
   idade: number;
   peso: number;
   altura: number;
@@ -20,6 +17,21 @@ export interface CriarAnuncioParams {
   longitude: number;
   fotos: File[];
   video?: File;
+  sobreUsuario: {
+    atendimento: string[];
+    etnia: string;
+    relacionamento: string;
+    cabelo: string;
+    estatura: string;
+    corpo: string;
+    seios: string;
+    pubis: string;
+  };
+  caches: Array<{
+    formaPagamento: string;
+    descricao: string;
+    valor: number;
+  }>;
 }
 
 export interface Localizacao {
@@ -36,8 +48,11 @@ export interface CriarAnuncioResponse {
   nome: string;
   descricao: string;
   preco: number;
-  categoria: string;
-  lugarEncontro: string;
+  saidas: string;
+  categoria: string[];           // agora array
+  lugarEncontro: string[];       // agora array
+  servicoPrestado: string;
+  servicoEspecial: string;
   disponibilidade: string;
   idade: number;
   peso: number;
@@ -46,4 +61,19 @@ export interface CriarAnuncioResponse {
   localizacao: Localizacao | null;
   fotos: string[];
   videos: string[];
+  sobreUsuario: {
+    atendimento: string[];
+    etnia: string;
+    relacionamento: string;
+    cabelo: string;
+    estatura: string;
+    corpo: string;
+    seios: string;
+    pubis: string;
+  };
+  caches: Array<{
+    formaPagamento: string;
+    descricao: string;
+    valor: number;
+  }>;
 }

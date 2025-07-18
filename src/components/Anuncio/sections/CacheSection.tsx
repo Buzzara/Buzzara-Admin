@@ -1,6 +1,6 @@
-// src/components/Anuncio/sections/CacheSection.tsx
 import React from "react";
 import MultiSelectField from "../MultiSelectField";
+import { MultiValue } from "react-select";
 import { Option } from "../servicosOptions";
 
 interface CacheLinha {
@@ -25,7 +25,7 @@ const CacheSection: React.FC<CacheSectionProps> = ({
   opcoesPagamento,
 }) => {
   const handleFormasPagamentoChange = (
-    selected: React.MultiValue<{ value: string; label: string }>
+    selected: MultiValue<Option> | null
   ) => {
     setFormasPagamento(selected ? selected.map((o) => o.value) : []);
   };

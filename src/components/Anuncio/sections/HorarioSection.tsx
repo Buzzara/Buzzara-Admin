@@ -1,4 +1,3 @@
-// src/components/Anuncio/sections/HorarioSection.tsx
 import React from "react";
 
 interface HorarioProps {
@@ -18,7 +17,6 @@ interface HorarioProps {
 
 const HorarioSection: React.FC<HorarioProps> = ({
   horario24h,
-  setHorario24h,
   startHour,
   setStartHour,
   startMinute,
@@ -27,21 +25,15 @@ const HorarioSection: React.FC<HorarioProps> = ({
   setEndHour,
   endMinute,
   setEndMinute,
-
 }) => {
-  // Gerar array ["00","01",...,"23"]
   const hours = Array.from({ length: 24 }, (_, i) =>
     i.toString().padStart(2, "0")
   );
-  // Minutos fixos
   const minutes = ["00", "15", "30", "45"];
 
   return (
     <div className="horario-section">
-      <h3 className="horario-section__title">
-        Horário
-      </h3>
-      {/** 2) Linhas “Das HH:MM Até as HH:MM” */}
+      <h3 className="horario-section__title">Horário</h3>
       <div className="horario-section__row horario-section__time-range">
         <span className="horario-section__label">Das</span>
         <select
@@ -95,8 +87,6 @@ const HorarioSection: React.FC<HorarioProps> = ({
           ))}
         </select>
       </div>
-
-      
     </div>
   );
 };

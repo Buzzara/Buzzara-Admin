@@ -1,6 +1,8 @@
 // src/components/Anuncio/sections/ServicosSection.tsx
+
 import React from "react";
-import MultiSelectField from "../MultiSelectField";
+import MultiSelectField, { MultiSelectFieldOption } from "../MultiSelectField";
+import { MultiValue } from "react-select";
 import { Option } from "../servicosOptions";
 
 interface ServicosProps {
@@ -28,76 +30,62 @@ const ServicosSection: React.FC<ServicosProps> = ({
 }) => {
   return (
     <>
-      {/* === Seção “Serviços” === */}
-      <div
-        className="modal__section"
-        style={{
-          border: "1px solid #ccc",
-          padding: "16px",
-          marginBottom: "24px",
-          borderRadius: "4px",
-        }}
-      >
+      {/* Serviços */}
+      <div className="modal__section" style={{
+        border: "1px solid #ccc",
+        padding: "16px",
+        marginBottom: "24px",
+        borderRadius: "4px",
+      }}>
         <h3 className="modal__section-title">Serviços</h3>
         <MultiSelectField
           label=""
           options={opcoesServicos}
           values={valorServicos}
-          onChange={(selected) =>
-            setValorServicos(selected ? selected.map((o) => o.value) : [])
-          }
+          onChange={(selected: MultiValue<MultiSelectFieldOption>) => {
+            setValorServicos(selected.map(o => o.value));
+          }}
           placeholder="Selecione os serviços"
         />
       </div>
-      {/* ==== Fim “Serviços” ==== */}
 
-      {/* === Seção “Serviços Especiais” === */}
-      <div
-        className="modal__section"
-        style={{
-          border: "1px solid #ccc",
-          padding: "16px",
-          marginBottom: "24px",
-          borderRadius: "4px",
-        }}
-      >
-        <h3 className="modal__section-title">Serviços especiais</h3>
+      {/* Serviços Especiais */}
+      <div className="modal__section" style={{
+        border: "1px solid #ccc",
+        padding: "16px",
+        marginBottom: "24px",
+        borderRadius: "4px",
+      }}>
+        <h3 className="modal__section-title">Serviços Especiais</h3>
         <MultiSelectField
           label=""
           options={opcoesServicosEspeciais}
           values={valorServicosEspeciais}
-          onChange={(selected) =>
-            setValorServicosEspeciais(
-              selected ? selected.map((o) => o.value) : []
-            )
-          }
+          onChange={(selected: MultiValue<MultiSelectFieldOption>) => {
+            setValorServicosEspeciais(selected.map(o => o.value));
+          }}
           placeholder="Selecione os serviços especiais"
         />
       </div>
-      {/* ==== Fim “Serviços Especiais” ==== */}
 
-      {/* === Seção “Lugar” === */}
-      <div
-        className="modal__section"
-        style={{
-          border: "1px solid #ccc",
-          padding: "16px",
-          marginBottom: "24px",
-          borderRadius: "4px",
-        }}
-      >
-        <h3 className="modal__section-title">Lugar</h3>
+      {/* Lugar de Encontro */}
+      <div className="modal__section" style={{
+        border: "1px solid #ccc",
+        padding: "16px",
+        marginBottom: "24px",
+        borderRadius: "4px",
+      }}>
+        <h3 className="modal__section-title">Lugar de Encontro</h3>
         <MultiSelectField
           label=""
           options={opcoesLugar}
           values={valorLugar}
-          onChange={(selected) =>
-            setValorLugar(selected ? selected.map((o) => o.value) : [])
-          }
-          placeholder="Selecione o lugar"
+          onChange={(selected: MultiValue<MultiSelectFieldOption>) => {
+            setValorLugar(selected.map(o => o.value));
+          }}
+          placeholder="Selecione o lugar de encontro"
         />
       </div>
-      {/* ==== Fim “Lugar” ==== */}
     </>
   );
 };

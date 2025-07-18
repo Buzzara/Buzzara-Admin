@@ -1,4 +1,3 @@
-// src/components/Anuncio/sections/ApresentacaoSection.tsx
 import React from "react";
 import InputField from "../InputField";
 

@@ -1,8 +1,16 @@
 // src/components/Anuncio/sections/OndeAnunciarSection.tsx
-import React from "react";
-import InputField from "../InputField";
-import MultiSelectField from "../MultiSelectField";
+
+import { useEffect, useState } from "react";
+import MultiSelectField, { MultiSelectFieldOption } from "../MultiSelectField";
 import { Estado } from "../../../types/localizacao/useEstado";
+
+import { geocodeCidade } from "../../../services/localizacao/geocoding";
+import { getLocalidadesProximas } from "../../../services/localizacao/localidadeProxima";
+import { LocalidadeProximaResponse } from "../../../types/localizacao/useLocalidadeProxima";
+
+interface MunicipioIBGE {
+  nome: string;
+}
 
 interface OndeAnunciarProps {
   tipoUsuario: "Garota" | "Trans" | "Homem";
@@ -25,12 +33,7 @@ interface OndeAnunciarProps {
   setSaidasA: (arr: string[]) => void;
 }
 
-const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
-  tipoUsuario,
-  setTipoUsuario,
-  todasCategorias,
-  categoriasSelecionadas,
-  setCategoriasSelecionadas,
+export default function OndeAnunciarSection({
   buscaLivre,
   setBuscaLivre,
   area,
@@ -44,9 +47,13 @@ const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
   setCidadesPorEstado,
   saidasA,
   setSaidasA,
-}) => {
-  // toda vez que “estado” mudar, buscamos as cidades no IBGE
-  React.useEffect(() => {
+}: OndeAnunciarProps) {
+  const [proximasOptions, setProximasOptions] = useState<
+    MultiSelectFieldOption[]
+  >([]);
+
+  // 1) carregar lista de cidades quando estado muda
+  useEffect(() => {
     if (!estado) {
       setCidadesPorEstado([]);
       return;
@@ -56,8 +63,8 @@ const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
         const res = await fetch(
           `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado}/municipios`
         );
-        const data = await res.json();
-        const nomes: string[] = data.map((obj: any) => obj.nome);
+        const data = (await res.json()) as MunicipioIBGE[];
+        const nomes = data.map((m) => m.nome);
         setCidadesPorEstado(nomes.sort((a, b) => a.localeCompare(b)));
       } catch (err) {
         console.error("❌ Erro ao buscar cidades:", err);
@@ -67,12 +74,37 @@ const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
     fetchCidades();
   }, [estado, setCidadesPorEstado]);
 
-  // troca de categoria
-  const toggleCategoria = (cat: string) => {
-    setCategoriasSelecionadas((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
-    );
-  };
+  // 2) quando cidade é escolhida, geocode + proximidades
+  useEffect(() => {
+    if (!cidade || !estado) {
+      setProximasOptions([]);
+      setSaidasA([]);
+      return;
+    }
+
+    (async () => {
+      try {
+        // Geocoding
+        const { lat, lon } = await geocodeCidade(cidade, estado);
+
+        // Busca localidades próximas
+        const proximas = await getLocalidadesProximas({
+          latitude: lat,
+          longitude: lon,
+        });
+
+        // Mapeia para opções do MultiSelect
+        const opts = proximas.map((loc: LocalidadeProximaResponse) => ({
+          value: loc.nome,
+          label: `${loc.nome} (${loc.distanciaKm.toFixed(2)} km)`,
+        }));
+        setProximasOptions(opts);
+      } catch (err) {
+        console.error("❌ Erro ao carregar localidades próximas:", err);
+        setProximasOptions([]);
+      }
+    })();
+  }, [cidade, estado, setSaidasA]);
 
   return (
     <div
@@ -84,9 +116,9 @@ const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
         borderRadius: "4px",
       }}
     >
-      <h3 className="modal__section-title">Onde anunciar‐se</h3>
-      
-      {/* 3) Pesquisa livre */}
+      <h3 className="modal__section-title">Onde anunciar‑se</h3>
+
+      {/* Busca Livre */}
       <div className="modal__subsection" style={{ marginBottom: "12px" }}>
         <span className="modal__small-label">
           Pesquisa facilmente a tua cidade ou bairro
@@ -101,7 +133,7 @@ const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
         />
       </div>
 
-      {/* 4) Estado → Cidade */}
+      {/* Estado e Cidade */}
       <div
         style={{
           display: "flex",
@@ -111,7 +143,8 @@ const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
         }}
       >
         <div style={{ flex: "1 1 200px" }}>
-          <InputField label="Estado" >
+          <div className="modal__field">
+            <label>Estado</label>
             <select
               className="modal__input"
               value={estado}
@@ -124,11 +157,12 @@ const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
                 </option>
               ))}
             </select>
-          </InputField>
+          </div>
         </div>
 
         <div style={{ flex: "1 1 200px" }}>
-          <InputField label="Cidade" >
+          <div className="modal__field">
+            <label>Cidade</label>
             <select
               className="modal__input"
               value={cidade}
@@ -144,44 +178,42 @@ const OndeAnunciarSection: React.FC<OndeAnunciarProps> = ({
                 </option>
               ))}
             </select>
-          </InputField>
+          </div>
         </div>
       </div>
 
-      {/* 5) Área (Opcional) */}
+      {/* Área (Opcional) */}
       <div style={{ marginBottom: "12px" }}>
-        <InputField
-          label="Área (Opcional)"
-          type="text"
-          value={area}
-          onChange={(e) => setArea(e.target.value)}
-          required={false}
-          placeholder="Ex.: Centro, Bairro XYZ"
-        />
+        <div className="modal__field">
+          <label>Área (Opcional)</label>
+          <input
+            type="text"
+            className="modal__input"
+            placeholder="Ex.: Centro, Bairro XYZ"
+            value={area}
+            onChange={(e) => setArea(e.target.value)}
+          />
+        </div>
       </div>
 
-      {/* 6) Saídas a (multi-select) */}
+      {/* Saídas a (multi-select) de localidades próximas */}
       <div style={{ marginBottom: "0px" }}>
         <MultiSelectField
           label="Saídas a"
-          options={cidadesPorEstado.map((ct) => ({
-            value: ct,
-            label: ct,
-          }))}
+          options={proximasOptions}
           values={saidasA}
           onChange={(selected) =>
             setSaidasA(selected ? selected.map((o) => o.value) : [])
           }
           placeholder={
-            cidadesPorEstado.length
-              ? "Selecione as cidades"
-              : "Escolha o estado acima"
+            proximasOptions.length
+              ? "Selecione as localidades próximas"
+              : cidade
+              ? "Carregando locais..."
+              : "Selecione a cidade acima"
           }
-          className={cidadesPorEstado.length ? "" : "disabled"}
         />
       </div>
     </div>
   );
-};
-
-export default OndeAnunciarSection;
+}

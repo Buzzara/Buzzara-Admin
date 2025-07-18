@@ -21,11 +21,18 @@ export const opcoesCabelo: MultiSelectFieldOption[] = [
   { value: "Loiras", label: "Loiras" },
   { value: "Ruivas", label: "Ruivas" },
 ];
+export const opcoesRol: MultiSelectFieldOption[] = [
+  { value: "Passivo", label: "Passivo" },
+  { value: "Ativos", label: "Ativos" },
+  { value: "Versáteis", label: "Versáteis" },
 
+];
 export const opcoesEstatura: MultiSelectFieldOption[] = [
   { value: "Altas", label: "Altas" },
   { value: "Mignon", label: "Mignon" },
 ];
+
+
 
 export const opcoesCorpo: MultiSelectFieldOption[] = [
   { value: "Gordinhas", label: "Gordinhas" },

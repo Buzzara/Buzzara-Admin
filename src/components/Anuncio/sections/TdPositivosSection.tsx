@@ -1,4 +1,3 @@
-// src/components/Anuncio/sections/TdPositivosSection.tsx
 import React from "react";
 
 interface TdPositivosSectionProps {
