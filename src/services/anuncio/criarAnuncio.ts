@@ -12,7 +12,7 @@ export function buildAnuncioFormData(data: CriarAnuncioParams): FormData {
 
   // 1) Campos simples
   const simples: Record<string, string> = {
-    Nome: data.nome,
+    Nome: data.nome ?? "",
     Descricao: data.descricao,
     Saidas: data.saidas,
     LugarEncontro: data.lugarEncontro.join(", "),

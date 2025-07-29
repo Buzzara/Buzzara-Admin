@@ -10,8 +10,6 @@ interface ApresentacaoProps {
   setPesoApresentacao: (v: number | "") => void;
   alturaApresentacao: number | "";
   setAlturaApresentacao: (v: number | "") => void;
-  tituloApresentacao: string;
-  setTituloApresentacao: (v: string) => void;
   textoApresentacao: string;
   setTextoApresentacao: (v: string) => void;
 }
@@ -25,8 +23,6 @@ const ApresentacaoSection: React.FC<ApresentacaoProps> = ({
   setPesoApresentacao,
   alturaApresentacao,
   setAlturaApresentacao,
-  tituloApresentacao,
-  setTituloApresentacao,
   textoApresentacao,
   setTextoApresentacao,
 }) => {

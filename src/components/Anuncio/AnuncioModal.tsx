@@ -91,7 +91,6 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   const [idadeApresentacao, setIdadeApresentacao] = useState<string>("");
   const [pesoApresentacao, setPesoApresentacao] = useState<number | "">("");
   const [alturaApresentacao, setAlturaApresentacao] = useState<number | "">("");
-  const [tituloApresentacao, setTituloApresentacao] = useState("");
   const [textoApresentacao, setTextoApresentacao] = useState("");
 
   const [horario24h, setHorario24h] = useState(false);
@@ -385,8 +384,6 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
             setPesoApresentacao={setPesoApresentacao}
             alturaApresentacao={alturaApresentacao}
             setAlturaApresentacao={setAlturaApresentacao}
-            tituloApresentacao={tituloApresentacao}
-            setTituloApresentacao={setTituloApresentacao}
             textoApresentacao={textoApresentacao}
             setTextoApresentacao={setTextoApresentacao}
           />
@@ -407,7 +404,6 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
             semana={semana}
             setSemana={setSemana}
             setHorarioUnico={setHorarioUnico}
-            horariosIndividuais={horariosIndividuais}
             setHorariosIndividuais={setHorariosIndividuais}
           />
 
