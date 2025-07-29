@@ -45,25 +45,40 @@ interface NewAnuncioModalProps {
   onSuccess: (anuncio: CriarAnuncioResponse) => void;
 }
 
+interface DiaHorario {
+  ativo: boolean;
+  horario24h: boolean;
+  dasHora: string;
+  dasMinuto: string;
+  ateHora: string;
+  ateMinuto: string;
+}
+
 const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
 }) => {
-  // Estados principais
   const [tipoUsuario, setTipoUsuario] = useState<"Garota" | "Trans" | "Homem">(
     "Garota"
   );
+
+  const genero =
+    tipoUsuario === "Homem"
+      ? "masculino"
+      : tipoUsuario === "Trans"
+      ? "outro"
+      : "feminino";
+
   const todasCategorias = [
     "Acompanhantes",
     "Massagens eróticas",
     "Videochamadas e Sexting",
   ];
-  const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<string[]>(
-    ["Acompanhantes"]
-  );
+  const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<
+    string[]
+  >(["Acompanhantes"]);
 
-  // Localização e busca
   const [buscaLivre, setBuscaLivre] = useState("");
   const [area, setArea] = useState("");
   const [estado, setEstado] = useState("");
@@ -72,17 +87,13 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   const [cidadesPorEstado, setCidadesPorEstado] = useState<string[]>([]);
   const [saidasA, setSaidasA] = useState<string[]>([]);
 
-  // Apresentação
   const [nomeApresentacao, setNomeApresentacao] = useState("");
   const [idadeApresentacao, setIdadeApresentacao] = useState<string>("");
   const [pesoApresentacao, setPesoApresentacao] = useState<number | "">("");
-  const [alturaApresentacao, setAlturaApresentacao] = useState<number | "">(
-    ""
-  );
+  const [alturaApresentacao, setAlturaApresentacao] = useState<number | "">("");
   const [tituloApresentacao, setTituloApresentacao] = useState("");
   const [textoApresentacao, setTextoApresentacao] = useState("");
 
-  // Horário
   const [horario24h, setHorario24h] = useState(false);
   const [startHour, setStartHour] = useState("08");
   const [startMinute, setStartMinute] = useState("00");
@@ -90,13 +101,17 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
   const [endMinute, setEndMinute] = useState("00");
   const [sameEveryDay, setSameEveryDay] = useState<"Sim" | "Não">("Sim");
 
-  // Serviços
-  const [servicosSelecionados, setServicosSelecionados] = useState<string[]>([]);
+  const [formasPagamento, setFormasPagamento] = useState<string[]>([]);
+
+  const [servicosSelecionados, setServicosSelecionados] = useState<string[]>(
+    []
+  );
   const [servicosEspeciaisSelecionados, setServicosEspeciaisSelecionados] =
     useState<string[]>([]);
   const [lugarSelecionado, setLugarSelecionado] = useState<string[]>([]);
 
-  // Sobre você
+  const [horariosIndividuais, setHorariosIndividuais] = useState<any>(null);
+
   const [sobreVoce, setSobreVoce] = useState({
     atendimentoA: [] as string[],
     etnia: "",
@@ -108,7 +123,76 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
     rol: [] as string[],
   });
 
-  // Cachês
+  const [horarioUnico, setHorarioUnico] = useState<
+    | {
+        diaSemana: string;
+        atende: boolean;
+        horarioInicio: string;
+        horarioFim: string;
+        vinteQuatroHoras: boolean;
+      }
+    | undefined
+  >(undefined);
+
+  const [semana, setSemana] = useState<Record<string, DiaHorario>>({
+    Segunda: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Terca: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Quarta: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Quinta: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Sexta: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Sabado: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Domingo: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+  });
+
   const [linhasCache, setLinhasCache] = useState(
     Array.from({ length: 8 }).map((_, i) => ({
       descricao: i === 0 ? "1 hora" : "",
@@ -117,20 +201,15 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
     }))
   );
 
-  // Mídia
   const [fotos, setFotos] = useState<File[]>([]);
   const [video, setVideo] = useState<File | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  // TD Positivos
   const [linkTD, setLinkTD] = useState<string>("");
-
-  // Controle UI
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 1) Busca lista de estados ao montar o componente
   useEffect(() => {
     const fetchEstados = async () => {
       try {
@@ -139,19 +218,15 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
         );
         const data = (await res.json()) as Estado[];
         setEstados(data.sort((a, b) => a.nome.localeCompare(b.nome)));
-      } catch (err: unknown) {
+      } catch (err) {
         console.error("❌ Erro ao buscar estados:", err);
       }
     };
     fetchEstados();
   }, []);
 
-  // 2) Busca cidades sempre que o usuário mudar o estado
   useEffect(() => {
-    if (!estado) {
-      setCidadesPorEstado([]);
-      return;
-    }
+    if (!estado) return setCidadesPorEstado([]);
     const fetchCidades = async () => {
       try {
         const res = await fetch(
@@ -161,13 +236,28 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
         setCidadesPorEstado(
           data.map((m) => m.nome).sort((a, b) => a.localeCompare(b))
         );
-      } catch (err: unknown) {
+      } catch (err) {
         console.error("❌ Erro ao buscar cidades:", err);
         setCidadesPorEstado([]);
       }
     };
     fetchCidades();
   }, [estado]);
+
+  function construirPayloadCachesUnificado(
+    formasPagamento: string[],
+    linhasCache: { descricao: string; valor: string; disabled: boolean }[]
+  ) {
+    const todasFormas = formasPagamento.join(", ");
+
+    return linhasCache
+      .filter((linha) => linha.descricao && Number(linha.valor) > 0)
+      .map((linha) => ({
+        formaPagamento: todasFormas,
+        descricao: linha.descricao,
+        valor: Number(linha.valor),
+      }));
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,10 +273,8 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
         servicoPrestado: servicosSelecionados.join(", "),
         servicoEspecial: servicosEspeciaisSelecionados.join(", "),
         idade: Number(idadeApresentacao),
-        peso:
-          typeof pesoApresentacao === "number" ? pesoApresentacao : 0,
-        altura:
-          typeof alturaApresentacao === "number" ? alturaApresentacao : 0,
+        peso: typeof pesoApresentacao === "number" ? pesoApresentacao : 0,
+        altura: typeof alturaApresentacao === "number" ? alturaApresentacao : 0,
         endereco: "",
         cidade,
         estado,
@@ -195,6 +283,39 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
         longitude: 0,
         fotos,
         video: video ?? undefined,
+
+        disponibilidade: horario24h
+          ? "24h"
+          : `${startHour}:${startMinute} - ${endHour}:${endMinute}`,
+
+        mesmoHorarioTodosOsDias: sameEveryDay === "Sim",
+
+        // 🔁 ⛔️ Remova isso! horáriosAtendimento não existe na interface do payload
+        // horáriosAtendimento: ...
+
+        // ✅ Adicione corretamente os campos esperados:
+        horarioUnico:
+          sameEveryDay === "Sim" && horarioUnico
+            ? {
+                diaSemana: horarioUnico.diaSemana,
+                atende: horarioUnico.atende,
+                horarioInicio: horarioUnico.horarioInicio,
+                horarioFim: horarioUnico.horarioFim,
+                vinteQuatroHoras: horarioUnico.vinteQuatroHoras,
+              }
+            : undefined,
+
+        horariosIndividuais:
+          sameEveryDay === "Não" && Array.isArray(horariosIndividuais)
+            ? horariosIndividuais.map((h) => ({
+                diaSemana: h.diaSemana,
+                atende: h.atende,
+                horarioInicio: h.horarioInicio,
+                horarioFim: h.horarioFim,
+                vinteQuatroHoras: h.vinteQuatroHoras,
+              }))
+            : undefined,
+
         sobreUsuario: {
           atendimento: sobreVoce.atendimentoA,
           etnia: sobreVoce.etnia,
@@ -205,27 +326,22 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
           seios: sobreVoce.seios,
           pubis: sobreVoce.pubis,
         },
-        caches: linhasCache
-          .filter((lc) => lc.descricao && Number(lc.valor) > 0)
-          .map((lc) => ({
-            formaPagamento: lc.descricao,
-            descricao: lc.descricao,
-            valor: Number(lc.valor) || 0,
-          })),
+
+        caches: construirPayloadCachesUnificado(formasPagamento, linhasCache),
       };
 
       const novo = await criarAnuncio(payload);
       onSuccess(novo);
       onClose();
-    } catch (err: unknown) {
-      let mensagem = "Erro desconhecido";
-      if (err instanceof Error) mensagem = err.message;
-      setError(mensagem);
+    } catch (err: any) {
+      setError(err.message || "Erro desconhecido");
       console.error("❌ Erro ao criar anúncio:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  console.log("🚹 Gênero:", genero);
 
   if (!isOpen) return null;
 
@@ -288,6 +404,11 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
             setEndMinute={setEndMinute}
             sameEveryDay={sameEveryDay}
             setSameEveryDay={setSameEveryDay}
+            semana={semana}
+            setSemana={setSemana}
+            setHorarioUnico={setHorarioUnico}
+            horariosIndividuais={horariosIndividuais}
+            setHorariosIndividuais={setHorariosIndividuais}
           />
 
           <ServicosSection
@@ -313,11 +434,12 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
             opcoesCorpo={opcoesCorpo}
             opcoesSeios={opcoesSeios}
             opcoesPubis={opcoesPubis}
+            genero={genero}
           />
 
           <CacheSection
-            formasPagamento={opcoesPagamento.map((o) => o.value)}
-            setFormasPagamento={() => {}}
+            formasPagamento={formasPagamento}
+            setFormasPagamento={setFormasPagamento}
             linhasCache={linhasCache}
             setLinhasCache={setLinhasCache}
             opcoesPagamento={opcoesPagamento}
@@ -330,7 +452,7 @@ const NewAnuncioModal: React.FC<NewAnuncioModalProps> = ({
             setVideo={setVideo}
             imageInputRef={imageInputRef}
             videoInputRef={videoInputRef}
-            photoSlots={8}
+            photoSlots={6}
           />
 
           <TdPositivosSection linkTD={linkTD} setLinkTD={setLinkTD} />

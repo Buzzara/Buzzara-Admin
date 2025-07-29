@@ -24,9 +24,7 @@ const CacheSection: React.FC<CacheSectionProps> = ({
   setLinhasCache,
   opcoesPagamento,
 }) => {
-  const handleFormasPagamentoChange = (
-    selected: MultiValue<Option> | null
-  ) => {
+  const handleFormasPagamentoChange = (selected: MultiValue<Option> | null) => {
     setFormasPagamento(selected ? selected.map((o) => o.value) : []);
   };
 
@@ -57,7 +55,7 @@ const CacheSection: React.FC<CacheSectionProps> = ({
       <MultiSelectField
         label="Formas de pagamento"
         options={opcoesPagamento}
-        values={formasPagamento}
+        values={formasPagamento} // já é string[]
         onChange={handleFormasPagamentoChange}
         placeholder="Selecione formas de pagamento"
       />

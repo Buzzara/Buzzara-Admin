@@ -34,6 +34,8 @@ interface OndeAnunciarProps {
 }
 
 export default function OndeAnunciarSection({
+  tipoUsuario,
+  setTipoUsuario,
   buscaLivre,
   setBuscaLivre,
   area,
@@ -52,7 +54,7 @@ export default function OndeAnunciarSection({
     MultiSelectFieldOption[]
   >([]);
 
-  // 1) carregar lista de cidades quando estado muda
+  // carregar cidades
   useEffect(() => {
     if (!estado) {
       setCidadesPorEstado([]);
@@ -74,7 +76,7 @@ export default function OndeAnunciarSection({
     fetchCidades();
   }, [estado, setCidadesPorEstado]);
 
-  // 2) quando cidade é escolhida, geocode + proximidades
+  // carregar localidades próximas
   useEffect(() => {
     if (!cidade || !estado) {
       setProximasOptions([]);
@@ -84,16 +86,12 @@ export default function OndeAnunciarSection({
 
     (async () => {
       try {
-        // Geocoding
         const { lat, lon } = await geocodeCidade(cidade, estado);
-
-        // Busca localidades próximas
         const proximas = await getLocalidadesProximas({
           latitude: lat,
           longitude: lon,
         });
 
-        // Mapeia para opções do MultiSelect
         const opts = proximas.map((loc: LocalidadeProximaResponse) => ({
           value: loc.nome,
           label: `${loc.nome} (${loc.distanciaKm.toFixed(2)} km)`,
@@ -117,6 +115,32 @@ export default function OndeAnunciarSection({
       }}
     >
       <h3 className="modal__section-title">Onde anunciar‑se</h3>
+
+      {/* ✅ Seletor de tipo de usuário */}
+      <div style={{ marginBottom: "12px" }}>
+        <label style={{ display: "block", marginBottom: "4px" }}>
+          Tipo de usuário
+        </label>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          {["Garota", "Trans", "Homem"].map((tipo) => (
+            <button
+              key={tipo}
+              type="button"
+              onClick={() => setTipoUsuario(tipo as any)}
+              style={{
+                padding: "8px 16px",
+                border: "1px solid #ccc",
+                backgroundColor: tipoUsuario === tipo ? "#007bff" : "#fff",
+                color: tipoUsuario === tipo ? "#fff" : "#000",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              {tipo}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Busca Livre */}
       <div className="modal__subsection" style={{ marginBottom: "12px" }}>
@@ -196,7 +220,7 @@ export default function OndeAnunciarSection({
         </div>
       </div>
 
-      {/* Saídas a (multi-select) de localidades próximas */}
+      {/* Saídas a */}
       <div style={{ marginBottom: "0px" }}>
         <MultiSelectField
           label="Saídas a"

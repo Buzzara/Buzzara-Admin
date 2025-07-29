@@ -3,6 +3,12 @@ import SelectField from "../SelectField";
 import MultiSelectField from "../MultiSelectField";
 import { Option } from "../servicosOptions";
 import { MultiValue, SingleValue } from "react-select";
+import {
+  opcoesEtniaHomem,
+  opcoesEstaturaHomem,
+  opcoesCorpoHomem,
+  opcoesPubisHomem,
+} from "../sobreVoceOptions";
 
 interface SobreVoce {
   atendimentoA: string[];
@@ -12,7 +18,7 @@ interface SobreVoce {
   corpo: string;
   seios: string;
   pubis: string;
-  rol: string[]; // ✅ novo campo
+  rol: string[];
 }
 
 interface SobreVoceProps {
@@ -25,7 +31,8 @@ interface SobreVoceProps {
   opcoesCorpo: Option[];
   opcoesSeios: Option[];
   opcoesPubis: Option[];
-  opcoesRol: Option[]; // ✅ nova prop
+  opcoesRol: Option[];
+  genero: string;
 }
 
 const SobreVoceSection: React.FC<SobreVoceProps> = ({
@@ -38,8 +45,19 @@ const SobreVoceSection: React.FC<SobreVoceProps> = ({
   opcoesCorpo,
   opcoesSeios,
   opcoesPubis,
-  opcoesRol, // ✅ novo
+  opcoesRol,
+  genero,
 }) => {
+  const generoNormalizado = genero.toLowerCase();
+
+  // 🪵 DEBUG LOGS
+  console.log("🔍 GÊNERO RECEBIDO:", genero);
+  console.log("🔍 GÊNERO NORMALIZADO:", generoNormalizado);
+  console.log("📦 Opções de etnia:", generoNormalizado === "masculino" ? opcoesEtniaHomem : opcoesEtnia);
+  console.log("📦 Opções de estatura:", generoNormalizado === "masculino" ? opcoesEstaturaHomem : opcoesEstatura);
+  console.log("📦 Opções de corpo:", generoNormalizado === "masculino" ? opcoesCorpoHomem : opcoesCorpo);
+  console.log("📦 Opções de púbis:", generoNormalizado === "masculino" ? opcoesPubisHomem : opcoesPubis);
+
   const makeMultiHandler =
     (key: keyof SobreVoce) => (selected: MultiValue<Option>) => {
       setSobreVoce((prev) => ({
@@ -55,6 +73,13 @@ const SobreVoceSection: React.FC<SobreVoceProps> = ({
         [key]: selected ? selected.value : "",
       }));
     };
+
+  const handleCorpoButtonClick = (valor: string) => {
+    setSobreVoce((prev) => ({
+      ...prev,
+      corpo: valor,
+    }));
+  };
 
   return (
     <div
@@ -77,7 +102,7 @@ const SobreVoceSection: React.FC<SobreVoceProps> = ({
 
       <SelectField
         label="Etnia"
-        options={opcoesEtnia}
+        options={generoNormalizado === "masculino" ? opcoesEtniaHomem : opcoesEtnia}
         value={sobreVoce.etnia}
         onChange={makeSingleHandler("etnia")}
       />
@@ -91,38 +116,69 @@ const SobreVoceSection: React.FC<SobreVoceProps> = ({
 
       <SelectField
         label="Estatura"
-        options={opcoesEstatura}
+        options={generoNormalizado === "masculino" ? opcoesEstaturaHomem : opcoesEstatura}
         value={sobreVoce.estatura}
         onChange={makeSingleHandler("estatura")}
       />
 
-      <SelectField
-        label="Corpo"
-        options={opcoesCorpo}
-        value={sobreVoce.corpo}
-        onChange={makeSingleHandler("corpo")}
-      />
+      {generoNormalizado === "masculino" ? (
+        <div>
+          <label style={{ display: "block", fontWeight: "bold", marginBottom: "6px" }}>
+            Corpo
+          </label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {opcoesCorpoHomem.map((opcao) => (
+              <button
+                type="button"
+                key={opcao.value}
+                onClick={() => handleCorpoButtonClick(opcao.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  backgroundColor:
+                    sobreVoce.corpo === opcao.value ? "#ccc" : "transparent",
+                  cursor: "pointer",
+                }}
+              >
+                {opcao.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <SelectField
+          label="Corpo"
+          options={opcoesCorpo}
+          value={sobreVoce.corpo}
+          onChange={makeSingleHandler("corpo")}
+        />
+      )}
 
-      <SelectField
-        label="Seios"
-        options={opcoesSeios}
-        value={sobreVoce.seios}
-        onChange={makeSingleHandler("seios")}
-      />
+      {generoNormalizado !== "masculino" && (
+        <SelectField
+          label="Seios"
+          options={opcoesSeios}
+          value={sobreVoce.seios}
+          onChange={makeSingleHandler("seios")}
+        />
+      )}
 
       <SelectField
         label="Púbis"
-        options={opcoesPubis}
+        options={generoNormalizado === "masculino" ? opcoesPubisHomem : opcoesPubis}
         value={sobreVoce.pubis}
         onChange={makeSingleHandler("pubis")}
       />
 
-      <MultiSelectField
-        label="Rol"
-        options={opcoesRol}
-        values={sobreVoce.rol}
-        onChange={makeMultiHandler("rol")}
-      />
+      {(generoNormalizado === "masculino" || generoNormalizado === "outro") && (
+        <MultiSelectField
+          label="Rol"
+          options={opcoesRol}
+          values={sobreVoce.rol}
+          onChange={makeMultiHandler("rol")}
+        />
+      )}
     </div>
   );
 };

@@ -39,3 +39,11 @@ export const opcoesLugar: Option[] = [
   { value: "Jantar romântico", label: "Jantar romântico" },
   { value: "Viagens", label: "Viagens" },
 ];
+
+
+export const opcoesCorpoHomem: string[] = [
+  "Atléticos",
+  "Gordinhos",
+  "Magros",
+  "Musculosos",
+];

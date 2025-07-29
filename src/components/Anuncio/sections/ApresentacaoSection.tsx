@@ -30,7 +30,6 @@ const ApresentacaoSection: React.FC<ApresentacaoProps> = ({
   textoApresentacao,
   setTextoApresentacao,
 }) => {
-
   return (
     <div
       className="modal__section"
@@ -42,14 +41,19 @@ const ApresentacaoSection: React.FC<ApresentacaoProps> = ({
       }}
     >
       <h3 className="modal__section-title">Apresentação</h3>
+      {/* 5) Título (mínimo 40 caracteres) */}
+      <label className="modal__label">
+        Título Anuncio
+        <input
+          type="text"
+          className="modal__input"
+          value={nomeApresentacao}
+          onChange={(e) => setNomeApresentacao(e.target.value)}
+          placeholder="Digite ao menos 40 caracteres"
+        />
+      </label>
 
-      {/* 1) Nome */}
-      <InputField
-        label="Nome"
-        type="text"
-        value={nomeApresentacao}
-        onChange={(e) => setNomeApresentacao(e.target.value)}
-      />
+      {/* <InputField label="Nome" type="text" /> */}
 
       {/* 2) Idade */}
       <label className="modal__label">
@@ -95,19 +99,6 @@ const ApresentacaoSection: React.FC<ApresentacaoProps> = ({
         min={0}
         step={0.1}
       />
-
-      {/* 5) Título (mínimo 40 caracteres) */}
-      <label className="modal__label">
-        Título
-        <input
-          type="text"
-          className="modal__input"
-          value={tituloApresentacao}
-          onChange={(e) => setTituloApresentacao(e.target.value)}
-          placeholder="Digite ao menos 40 caracteres"
-        />
-      </label>
-      
 
       {/* 6) Texto (mínimo 250 caracteres) */}
       <label className="modal__label">
