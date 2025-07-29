@@ -14,10 +14,10 @@ import EditAnuncioModal from "../components/EditAnuncioModal/EditAnuncioModal";
 import { buscarAnuncio } from "../services/anuncio/buscarAnuncio";
 import { deletarAnuncio } from "../services/anuncio/deletarAnuncio";
 
-import type { AnuncioResponse } from "../services/anuncio/userAnuncio";
 import type { EditarAnuncioResponse } from "../types/anuncio/useEditarAnuncio";
 
 import "../styles/anunciosPage.scss";
+import { CriarAnuncioResponse } from "../types/anuncio/useCriarAnuncio";
 
 interface MediaItem {
   type: "image" | "video";
@@ -187,23 +187,32 @@ const AnunciosPage: React.FC = () => {
       (filter === "Todos" || a.status === filter)
   );
 
-  const handleCreateSuccess = (item: AnuncioResponse) => {
+const handleCreateSuccess = async (item: CriarAnuncioResponse) => {
+  try {
+    const data = await buscarAnuncio(); // Busca os anúncios atualizados
+    const created = data.find((d) => d.servicoID === item.servicoID);
+    if (!created) return;
+
     const novo: Anuncio = {
-      id: String(item.servicoID),
-      title: item.nome,
-      descricao: item.descricao,
-      rawDate: item.dataCriacao,
-      preco: item.preco,
-      categoria: item.categoria,
-      lugarEncontro: item.lugarEncontro,
-      createdAt: new Date(item.dataCriacao).toLocaleDateString(),
+      id: String(created.servicoID),
+      title: created.nome,
+      descricao: created.descricao,
+      rawDate: created.dataCriacao,
+      preco: created.preco,
+      categoria: created.categoria,
+      lugarEncontro: created.lugarEncontro,
+      createdAt: new Date(created.dataCriacao).toLocaleDateString(),
       status: "Ativo",
-      fotos: item.fotos ?? [],
-      videos: item.videos ?? [],
+      fotos: created.fotos ?? [],
+      videos: created.videos ?? [],
     };
     setAnuncios((prev) => [novo, ...prev]);
     setIsNewOpen(false);
-  };
+  } catch (err) {
+    console.error("Erro ao buscar anúncio recém-criado:", err);
+  }
+};
+
 
   const handleEditSuccess = (updated: Anuncio) => {
     setAnuncios((prev) =>
@@ -323,7 +332,7 @@ const AnunciosPage: React.FC = () => {
           isOpen
           servicoID={meuServicoId ?? 0}
           onClose={() => setIsNewOpen(false)}
-          onSuccess={handleCreateSuccess}
+          onSuccess={handleCreateSuccess} 
         />
       )}
 
