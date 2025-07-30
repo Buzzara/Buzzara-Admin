@@ -1,90 +1,348 @@
-import React, { useState, useEffect, ChangeEvent } from "react";
-import type {
-  EditarAnuncioResponse,
-  EditarAnuncioParams,
-} from "../../types/anuncio/useEditarAnuncio";
+import React, { useState, useRef, useEffect } from "react";
+import "../Anuncio/style/NewAnuncioModal.scss";
+import { Estado } from "../../types/localizacao/useEstado";
 import { editarAnuncio } from "../../services/anuncio/editarAnuncio";
-import "./EditAnuncioModal.scss";
+import type {
+  EditarAnuncioParams,
+  EditarAnuncioResponse,
+} from "../../types/anuncio/useEditarAnuncio";
 
-const weekdayNames = [
-  "Domingo",
-  "Segunda-feira",
-  "Terça-feira",
-  "Quarta-feira",
-  "Quinta-feira",
-  "Sexta-feira",
-  "Sábado",
-];
-function getWeekdayName(dateString: string): string {
-  if (!dateString) return "";
-  const [Y, M, D] = dateString.split("-").map(Number);
-  return weekdayNames[new Date(Y, M - 1, D).getDay()] || "";
+import OndeAnunciarSection from "../Anuncio/sections/OndeAnunciarSection";
+import ApresentacaoSection from "../Anuncio/sections/ApresentacaoSection";
+import HorarioSection from "../Anuncio/sections/HorarioSection";
+import ServicosSection from "../Anuncio/sections/ServicosSection";
+import SobreVoceSection from "../Anuncio/sections/SobreVoceSection";
+import CacheSection from "../Anuncio/sections/CacheSection";
+import FotosVideoSection from "../Anuncio/sections/FotosVideoSection";
+import TdPositivosSection from "../Anuncio/sections/TdPositivosSection";
+
+import {
+  opcoesAtendimentoA,
+  opcoesEtnia,
+  opcoesCabelo,
+  opcoesEstatura,
+  opcoesCorpo,
+  opcoesSeios,
+  opcoesPubis,
+  opcoesPagamento,
+  opcoesRol,
+} from "../Anuncio/sobreVoceOptions";
+
+import {
+  opcoesServicos,
+  opcoesServicosEspeciais,
+  opcoesLugar,
+} from "../Anuncio/servicosOptions";
+
+interface MunicipioIBGE {
+  nome: string;
 }
 
 interface EditAnuncioModalProps {
   isOpen: boolean;
   anuncio: EditarAnuncioResponse;
   onClose: () => void;
-  onSuccess: (atualizado: EditarAnuncioResponse) => void;
+  onSuccess: (anuncio: EditarAnuncioResponse) => void;
 }
 
-export default function EditAnuncioModal({
+interface DiaHorario {
+  ativo: boolean;
+  horario24h: boolean;
+  dasHora: string;
+  dasMinuto: string;
+  ateHora: string;
+  ateMinuto: string;
+}
+
+const EditAnuncioModal: React.FC<EditAnuncioModalProps> = ({
   isOpen,
   anuncio,
   onClose,
   onSuccess,
-}: EditAnuncioModalProps) {
-  const [nome, setNome] = useState("");
-  const [descricao, setDescricao] = useState("");
-  const [preco, setPreco] = useState<number>(0);
-  const [categoria, setCategoria] = useState("");
-  const [lugarEncontro, setLugarEncontro] = useState("");
+}) => {
+  const [tipoUsuario, setTipoUsuario] = useState<"Garota" | "Trans" | "Homem">(
+    "Garota"
+  );
 
-  const [dataInicio, setDataInicio] = useState("");
-  const [dataFim, setDataFim] = useState("");
-  const [horaInicio, setHoraInicio] = useState("");
-  const [horaFim, setHoraFim] = useState("");
+  const genero =
+    tipoUsuario === "Homem"
+      ? "masculino"
+      : tipoUsuario === "Trans"
+      ? "outro"
+      : "feminino";
+
+  const todasCategorias = [
+    "Acompanhantes",
+    "Massagens eróticas",
+    "Videochamadas e Sexting",
+  ];
+  const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<
+    string[]
+  >(["Acompanhantes"]);
+
+  const [buscaLivre, setBuscaLivre] = useState("");
+  const [area, setArea] = useState("");
+  const [estado, setEstado] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estados, setEstados] = useState<Estado[]>([]);
+  const [cidadesPorEstado, setCidadesPorEstado] = useState<string[]>([]);
+  const [saidasA, setSaidasA] = useState<string[]>([]);
+
+  const [nomeApresentacao, setNomeApresentacao] = useState("");
+  const [idadeApresentacao, setIdadeApresentacao] = useState<string>("");
+  const [pesoApresentacao, setPesoApresentacao] = useState<number | "">("");
+  const [alturaApresentacao, setAlturaApresentacao] = useState<number | "">("");
+  const [textoApresentacao, setTextoApresentacao] = useState("");
+
+  const [horario24h, setHorario24h] = useState(false);
+  const [startHour, setStartHour] = useState("08");
+  const [startMinute, setStartMinute] = useState("00");
+  const [endHour, setEndHour] = useState("18");
+  const [endMinute, setEndMinute] = useState("00");
+  const [sameEveryDay, setSameEveryDay] = useState<"Sim" | "Não">("Sim");
+
+  const [formasPagamento, setFormasPagamento] = useState<string[]>([]);
+
+  const [servicosSelecionados, setServicosSelecionados] = useState<string[]>(
+    []
+  );
+  const [servicosEspeciaisSelecionados, setServicosEspeciaisSelecionados] =
+    useState<string[]>([]);
+  const [lugarSelecionado, setLugarSelecionado] = useState<string[]>([]);
+
+  const [horariosIndividuais, setHorariosIndividuais] = useState<any>(null);
+
+  const [sobreVoce, setSobreVoce] = useState({
+    atendimentoA: [] as string[],
+    etnia: "",
+    cabelo: "",
+    estatura: "",
+    corpo: "",
+    seios: "",
+    pubis: "",
+    rol: [] as string[],
+  });
+
+  const [horarioUnico, setHorarioUnico] = useState<
+    | {
+        diaSemana: string;
+        atende: boolean;
+        horarioInicio: string;
+        horarioFim: string;
+        vinteQuatroHoras: boolean;
+      }
+    | undefined
+  >(undefined);
+
+  const [semana, setSemana] = useState<Record<string, DiaHorario>>({
+    Segunda: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Terca: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Quarta: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Quinta: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Sexta: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Sabado: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+    Domingo: {
+      ativo: true,
+      horario24h: false,
+      dasHora: "01",
+      dasMinuto: "10",
+      ateHora: "03",
+      ateMinuto: "00",
+    },
+  });
+
+  const [linhasCache, setLinhasCache] = useState(
+    Array.from({ length: 8 }).map((_, i) => ({
+      descricao: i === 0 ? "1 hora" : "",
+      valor: "",
+      disabled: i === 0,
+    }))
+  );
 
   const [fotos, setFotos] = useState<File[]>([]);
-  const [videos, setVideos] = useState<File[]>([]);
+  const [video, setVideo] = useState<File | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
+  const [linkTD, setLinkTD] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const normalizar = (texto: string) => texto.trim().toLowerCase();
+
   useEffect(() => {
-    if (!isOpen) return;
+    const fetchEstados = async () => {
+      try {
+        const res = await fetch(
+          "https://servicodados.ibge.gov.br/api/v1/localidades/estados"
+        );
+        const data = (await res.json()) as Estado[];
+        setEstados(data.sort((a, b) => a.nome.localeCompare(b.nome)));
+      } catch (err) {
+        console.error("❌ Erro ao buscar estados:", err);
+      }
+    };
+    fetchEstados();
+  }, []);
 
-    setNome(anuncio.nome);
-    setDescricao(anuncio.descricao);
-    setPreco(anuncio.preco);
-    setCategoria(anuncio.categoria);
-    setLugarEncontro(anuncio.lugarEncontro);
+  useEffect(() => {
+    if (!estado) return setCidadesPorEstado([]);
+    const fetchCidades = async () => {
+      try {
+        const res = await fetch(
+          `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado}/municipios`
+        );
+        const data = (await res.json()) as MunicipioIBGE[];
+        setCidadesPorEstado(
+          data.map((m) => m.nome).sort((a, b) => a.localeCompare(b))
+        );
+      } catch (err) {
+        console.error("❌ Erro ao buscar cidades:", err);
+        setCidadesPorEstado([]);
+      }
+    };
+    fetchCidades();
+  }, [estado]);
 
-    setDataInicio("");
-    setDataFim("");
-    setHoraInicio("");
-    setHoraFim("");
+  useEffect(() => {
+    if (isOpen && anuncio) {
+      if (anuncio.localizacao) {
+        setArea(anuncio.localizacao.bairro);
+        setEstado(anuncio.localizacao.estado);
+        setCidade(anuncio.localizacao.cidade);
+      }
+      setSaidasA(
+        anuncio.saidas ? anuncio.saidas.split(",").map((s) => s.trim()) : []
+      );
+      setNomeApresentacao(anuncio.nome);
+      setIdadeApresentacao(String(anuncio.idade));
+      setPesoApresentacao(anuncio.peso);
+      setAlturaApresentacao(anuncio.altura);
+      setTextoApresentacao(anuncio.descricao);
+      if (anuncio.caches) {
+        setFormasPagamento(anuncio.caches.map((c) => c.formaPagamento));
+        setLinhasCache(
+          anuncio.caches.map((c) => ({
+            descricao: c.descricao,
+            valor: String(c.valor),
+            disabled: false,
+          }))
+        );
+      }
+      setServicosSelecionados(
+        opcoesServicos
+          .filter((opt) =>
+            (anuncio.servicoPrestado ?? "")
+              .split(",")
+              .map(normalizar)
+              .includes(normalizar(opt.value))
+          )
+          .map((opt) => opt.value)
+      );
+      setServicosEspeciaisSelecionados(
+        opcoesServicosEspeciais
+          .filter((opt) =>
+            (anuncio.servicoEspecial ?? "")
+              .split(",")
+              .map(normalizar)
+              .includes(normalizar(opt.value))
+          )
+          .map((opt) => opt.value)
+      );
+      setLugarSelecionado(
+        anuncio.lugarEncontro
+          ? anuncio.lugarEncontro.split(",").map((l) => l.trim())
+          : []
+      );
+      if (anuncio.sobreUsuario) {
+        setSobreVoce({
+          atendimentoA: anuncio.sobreUsuario.atendimento,
+          etnia: anuncio.sobreUsuario.etnia,
+          cabelo: anuncio.sobreUsuario.cabelo,
+          estatura: anuncio.sobreUsuario.estatura,
+          corpo: anuncio.sobreUsuario.corpo,
+          seios: anuncio.sobreUsuario.seios,
+          pubis: anuncio.sobreUsuario.pubis,
+          rol: anuncio.sobreUsuario.relacionamento
+            ? anuncio.sobreUsuario.relacionamento
+                .split(",")
+                .map((r) => r.trim())
+            : [],
+        });
+      }
 
-    setFotos([]);
-    setVideos([]);
-    setError(null);
+      console.log("🚀 Dados brutos da API:");
+    console.log("servicoPrestado:", anuncio.servicoPrestado);
+    console.log("servicoEspecial:", anuncio.servicoEspecial);
+
+    console.log("🎯 Opções válidas (value) - Serviços:");
+    console.log(opcoesServicos.map((opt) => opt.value));
+
+    console.log("🎯 Opções válidas (value) - Serviços Especiais:");
+    console.log(opcoesServicosEspeciais.map((opt) => opt.value));
+
+      // Note: Fotos and video are not directly editable this way, this is a placeholder
+      setFotos([]);
+      setVideo(null);
+    }
   }, [isOpen, anuncio]);
 
-  const onFotoChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const newFiles = Array.from(e.target.files);
-    setFotos((prev) => {
-      const combined = [...prev, ...newFiles].slice(0, 4);
-      return combined;
-    });
-    e.target.value = "";
-  };
+  function construirPayloadCachesUnificado(
+    formasPagamento: string[],
+    linhasCache: { descricao: string; valor: string; disabled: boolean }[]
+  ) {
+    const todasFormas = formasPagamento.join(", ");
 
-  const onVideoChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    setVideos([e.target.files[0]]);
-    e.target.value = "";
-  };
+    return linhasCache
+      .filter((linha) => linha.descricao && Number(linha.valor) > 0)
+      .map((linha) => ({
+        formaPagamento: todasFormas,
+        descricao: linha.descricao,
+        valor: Number(linha.valor),
+      }));
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,27 +350,82 @@ export default function EditAnuncioModal({
     setError(null);
 
     try {
-      const diaIn = getWeekdayName(dataInicio);
-      const diaFm = getWeekdayName(dataFim);
-      const disponibilidade = `${diaIn} até ${diaFm}, horário: ${horaInicio} às ${horaFim}`;
+      const payload: EditarAnuncioParams = {
+        nome: nomeApresentacao,
+        descricao: textoApresentacao,
+        saidas: [...saidasA, area].filter(Boolean).join(", "),
+        lugarEncontro: lugarSelecionado,
+        servicoPrestado: servicosSelecionados.join(", "),
+        servicoEspecial: servicosEspeciaisSelecionados.join(", "),
+        idade: idadeApresentacao !== "" ? Number(idadeApresentacao) : 0,
+        peso:
+          pesoApresentacao !== undefined && pesoApresentacao !== ""
+            ? Number(pesoApresentacao)
+            : 0,
+        altura:
+          alturaApresentacao !== undefined && alturaApresentacao !== ""
+            ? Number(alturaApresentacao)
+            : 0,
 
-      const params: EditarAnuncioParams = {
-        nome,
-        descricao,
-        preco,
-        categoria,
-        lugarEncontro,
-        disponibilidade,
+        endereco: "",
+        cidade,
+        estado,
+        bairro: "",
+        latitude: 0,
+        longitude: 0,
+        fotos: fotos,
+        video: video ?? undefined,
+
+        disponibilidade: horario24h
+          ? "24h"
+          : `${startHour}:${startMinute} - ${endHour}:${endMinute}`,
+
+        mesmoHorarioTodosOsDias: sameEveryDay === "Sim",
+
+        horarioUnico:
+          sameEveryDay === "Sim" && horarioUnico
+            ? {
+                diaSemana: horarioUnico.diaSemana,
+                atende: horarioUnico.atende,
+                horarioInicio: horarioUnico.horarioInicio,
+                horarioFim: horarioUnico.horarioFim,
+                vinteQuatroHoras: horarioUnico.vinteQuatroHoras,
+              }
+            : undefined,
+
+        horariosIndividuais:
+          sameEveryDay === "Não" && Array.isArray(horariosIndividuais)
+            ? horariosIndividuais.map((h) => ({
+                diaSemana: h.diaSemana,
+                atende: h.atende,
+                horarioInicio: h.horarioInicio,
+                horarioFim: h.horarioFim,
+                vinteQuatroHoras: h.vinteQuatroHoras,
+              }))
+            : undefined,
+
+        sobreUsuario: {
+          atendimento: sobreVoce.atendimentoA,
+          etnia: sobreVoce.etnia,
+          relacionamento: Array.isArray(sobreVoce.rol)
+            ? sobreVoce.rol.join(", ")
+            : "",
+          cabelo: sobreVoce.cabelo,
+          estatura: sobreVoce.estatura,
+          corpo: sobreVoce.corpo,
+          seios: sobreVoce.seios,
+          pubis: sobreVoce.pubis,
+        },
+
+        caches: construirPayloadCachesUnificado(formasPagamento, linhasCache),
       };
-      if (fotos.length) params.novasFotos = fotos;
-      if (videos.length) params.novoVideo = videos[0];
 
-      const updated = await editarAnuncio(anuncio.servicoID, params);
-      onSuccess(updated);
+      const atualizado = await editarAnuncio(anuncio.servicoID, payload);
+      onSuccess(atualizado);
       onClose();
     } catch (err: any) {
-      console.error("Erro ao editar anúncio:", err);
-      setError("Não foi possível salvar. Tente novamente.");
+      setError(err.message || "Erro desconhecido");
+      console.error("❌ Erro ao editar anúncio:", err);
     } finally {
       setLoading(false);
     }
@@ -122,183 +435,112 @@ export default function EditAnuncioModal({
 
   return (
     <div className="modal-overlay">
-      <div className="modal edit-modal">
+      <div className="modal">
         <button className="modal__close" onClick={onClose}>
           &times;
         </button>
         <h2 className="modal__title">Editar Anúncio</h2>
         {error && <div className="modal__error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="modal__form">
-          <label className="modal__label">
-            Nome
-            <input
-              className="modal__input"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              required
-            />
-          </label>
+        <form className="modal__form" onSubmit={handleSubmit}>
+          <OndeAnunciarSection
+            tipoUsuario={tipoUsuario}
+            setTipoUsuario={setTipoUsuario}
+            todasCategorias={todasCategorias}
+            categoriasSelecionadas={categoriasSelecionadas}
+            setCategoriasSelecionadas={setCategoriasSelecionadas}
+            buscaLivre={buscaLivre}
+            setBuscaLivre={setBuscaLivre}
+            area={area}
+            setArea={setArea}
+            estado={estado}
+            setEstado={setEstado}
+            cidade={cidade}
+            setCidade={setCidade}
+            estadosLista={estados}
+            cidadesPorEstado={cidadesPorEstado}
+            setCidadesPorEstado={setCidadesPorEstado}
+            saidasA={saidasA}
+            setSaidasA={setSaidasA}
+          />
 
-          <label className="modal__label">
-            Descrição
-            <textarea
-              className="modal__textarea"
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              required
-            />
-          </label>
+          <ApresentacaoSection
+            nomeApresentacao={nomeApresentacao}
+            setNomeApresentacao={setNomeApresentacao}
+            idadeApresentacao={idadeApresentacao}
+            setIdadeApresentacao={setIdadeApresentacao}
+            pesoApresentacao={pesoApresentacao}
+            setPesoApresentacao={setPesoApresentacao}
+            alturaApresentacao={alturaApresentacao}
+            setAlturaApresentacao={setAlturaApresentacao}
+            textoApresentacao={textoApresentacao}
+            setTextoApresentacao={setTextoApresentacao}
+          />
 
-          <label className="modal__label">
-            Preço
-            <input
-              type="number"
-              step="0.01"
-              className="modal__input"
-              value={preco}
-              onChange={(e) => setPreco(Number(e.target.value))}
-              required
-            />
-          </label>
+          <HorarioSection
+            horario24h={horario24h}
+            setHorario24h={setHorario24h}
+            startHour={startHour}
+            setStartHour={setStartHour}
+            startMinute={startMinute}
+            setStartMinute={setStartMinute}
+            endHour={endHour}
+            setEndHour={setEndHour}
+            endMinute={endMinute}
+            setEndMinute={setEndMinute}
+            sameEveryDay={sameEveryDay}
+            setSameEveryDay={setSameEveryDay}
+            semana={semana}
+            setSemana={setSemana}
+            setHorarioUnico={setHorarioUnico}
+            setHorariosIndividuais={setHorariosIndividuais}
+          />
 
-          <label className="modal__label">
-            Categoria
-            <select
-              className="modal__input"
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              required
-            >
-              <option value="">Selecione...</option>
-              <option value="Acompanhante">Acompanhante</option>
-              <option value="Mensagens Eróticas">Mensagens Eróticas</option>
-              <option value="Vídeo Chamadas">Vídeo Chamadas</option>
-              <option value="Sexting">Sexting</option>
-            </select>
-          </label>
+          <ServicosSection
+            valorServicos={servicosSelecionados}
+            setValorServicos={setServicosSelecionados}
+            valorServicosEspeciais={servicosEspeciaisSelecionados}
+            setValorServicosEspeciais={setServicosEspeciaisSelecionados}
+            valorLugar={lugarSelecionado}
+            setValorLugar={setLugarSelecionado}
+            opcoesServicos={opcoesServicos}
+            opcoesServicosEspeciais={opcoesServicosEspeciais}
+            opcoesLugar={opcoesLugar}
+          />
 
-          <label className="modal__label">
-            Local de Encontro
-            <input
-              className="modal__input"
-              value={lugarEncontro}
-              onChange={(e) => setLugarEncontro(e.target.value)}
-              required
-            />
-          </label>
+          <SobreVoceSection
+            sobreVoce={sobreVoce}
+            setSobreVoce={setSobreVoce}
+            opcoesAtendimentoA={opcoesAtendimentoA}
+            opcoesEtnia={opcoesEtnia}
+            opcoesCabelo={opcoesCabelo}
+            opcoesRol={opcoesRol}
+            opcoesEstatura={opcoesEstatura}
+            opcoesCorpo={opcoesCorpo}
+            opcoesSeios={opcoesSeios}
+            opcoesPubis={opcoesPubis}
+            genero={genero}
+          />
 
-          <div className="modal__section">
-            <div className="modal__section-title">Disponibilidade</div>
-            <div className="modal__availability-grid">
-              <label className="modal__label">
-                Data Início
-                <input
-                  type="date"
-                  className="modal__input"
-                  value={dataInicio}
-                  onChange={(e) => setDataInicio(e.target.value)}
-                  required
-                />
-              </label>
-              <label className="modal__label">
-                Data Fim
-                <input
-                  type="date"
-                  className="modal__input"
-                  value={dataFim}
-                  onChange={(e) => setDataFim(e.target.value)}
-                  required
-                />
-              </label>
-              <label className="modal__label">
-                Hora Início
-                <input
-                  type="time"
-                  className="modal__input"
-                  value={horaInicio}
-                  onChange={(e) => setHoraInicio(e.target.value)}
-                  required
-                />
-              </label>
-              <label className="modal__label">
-                Hora Fim
-                <input
-                  type="time"
-                  className="modal__input"
-                  value={horaFim}
-                  onChange={(e) => setHoraFim(e.target.value)}
-                  required
-                />
-              </label>
-            </div>
-          </div>
+          <CacheSection
+            formasPagamento={formasPagamento}
+            setFormasPagamento={setFormasPagamento}
+            linhasCache={linhasCache}
+            setLinhasCache={setLinhasCache}
+            opcoesPagamento={opcoesPagamento}
+          />
 
-          <div className="modal__section">
-            <div className="modal__attachments">
-              {fotos.map((file, idx) => {
-                const preview = URL.createObjectURL(file);
-                return (
-                  <div key={idx} className="attachment">
-                    <img src={preview} alt={`Foto ${idx + 1}`} />
-                    <button
-                      type="button"
-                      className="remove-btn"
-                      onClick={() =>
-                        setFotos((prev) => prev.filter((_, i) => i !== idx))
-                      }
-                    >
-                      &times;
-                    </button>
-                  </div>
-                );
-              })}
-              {fotos.length < 4 && (
-                <label className="attachment add">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={onFotoChange}
-                    style={{ display: "none" }}
-                  />
-                  +
-                </label>
-              )}
-            </div>
-          </div>
+          <FotosVideoSection
+            fotos={fotos}
+            setFotos={setFotos}
+            video={video}
+            setVideo={setVideo}
+            imageInputRef={imageInputRef}
+            videoInputRef={videoInputRef}
+            photoSlots={6}
+          />
 
-          <div className="modal__section">
-            <div className="modal__section-title">Adicionar Vídeo</div>
-            <div className="modal__attachments">
-              {videos.map((file, idx) => {
-                const preview = URL.createObjectURL(file);
-                return (
-                  <div key={idx} className="attachment">
-                    <video src={preview} controls />
-                    <button
-                      type="button"
-                      className="remove-btn"
-                      onClick={() => setVideos([])}
-                    >
-                      &times;
-                    </button>
-                  </div>
-                );
-              })}
-              {videos.length === 0 && (
-                <label className="attachment add">
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={onVideoChange}
-                    style={{ display: "none" }}
-                  />
-                  +
-                </label>
-              )}
-            </div>
-          </div>
+          <TdPositivosSection linkTD={linkTD} setLinkTD={setLinkTD} />
 
           <button type="submit" className="modal__submit" disabled={loading}>
             {loading ? "Salvando..." : "Salvar Alterações"}
@@ -307,4 +549,6 @@ export default function EditAnuncioModal({
       </div>
     </div>
   );
-}
+};
+
+export default EditAnuncioModal;
