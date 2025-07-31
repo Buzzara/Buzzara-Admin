@@ -326,7 +326,6 @@ const AnunciosPage: React.FC = () => {
           onSuccess={handleCreateSuccess}
         />
       )}
-      ... // código igual até a parte do EditAnuncioModal
       {editing && (
         <EditAnuncioModal
           isOpen
