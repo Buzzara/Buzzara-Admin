@@ -110,9 +110,7 @@ const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({
             {mediaItems.map((m, idx) => (
               <div
                 key={idx}
-                className={`carousel__thumb ${
-                  idx === current ? "active" : ""
-                }`}
+                className={`carousel__thumb ${idx === current ? "active" : ""}`}
                 onClick={() => setCurrent(idx)}
               >
                 {m.type === "video" ? (
@@ -187,37 +185,34 @@ const AnunciosPage: React.FC = () => {
       (filter === "Todos" || a.status === filter)
   );
 
-const handleCreateSuccess = async (item: CriarAnuncioResponse) => {
-  try {
-    const data = await buscarAnuncio(); // Busca os anúncios atualizados
-    const created = data.find((d) => d.servicoID === item.servicoID);
-    if (!created) return;
+  const handleCreateSuccess = async (item: CriarAnuncioResponse) => {
+    try {
+      const data = await buscarAnuncio(); // Busca os anúncios atualizados
+      const created = data.find((d) => d.servicoID === item.servicoID);
+      if (!created) return;
 
-    const novo: Anuncio = {
-      id: String(created.servicoID),
-      title: created.nome,
-      descricao: created.descricao,
-      rawDate: created.dataCriacao,
-      preco: created.preco,
-      categoria: created.categoria,
-      lugarEncontro: created.lugarEncontro,
-      createdAt: new Date(created.dataCriacao).toLocaleDateString(),
-      status: "Ativo",
-      fotos: created.fotos ?? [],
-      videos: created.videos ?? [],
-    };
-    setAnuncios((prev) => [novo, ...prev]);
-    setIsNewOpen(false);
-  } catch (err) {
-    console.error("Erro ao buscar anúncio recém-criado:", err);
-  }
-};
-
+      const novo: Anuncio = {
+        id: String(created.servicoID),
+        title: created.nome,
+        descricao: created.descricao,
+        rawDate: created.dataCriacao,
+        preco: created.preco,
+        categoria: created.categoria,
+        lugarEncontro: created.lugarEncontro,
+        createdAt: new Date(created.dataCriacao).toLocaleDateString(),
+        status: "Ativo",
+        fotos: created.fotos ?? [],
+        videos: created.videos ?? [],
+      };
+      setAnuncios((prev) => [novo, ...prev]);
+      setIsNewOpen(false);
+    } catch (err) {
+      console.error("Erro ao buscar anúncio recém-criado:", err);
+    }
+  };
 
   const handleEditSuccess = (updated: Anuncio) => {
-    setAnuncios((prev) =>
-      prev.map((a) => (a.id === updated.id ? updated : a))
-    );
+    setAnuncios((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
     setEditing(null);
   };
 
@@ -246,7 +241,6 @@ const handleCreateSuccess = async (item: CriarAnuncioResponse) => {
           <PlusCircle size={20} color="#ffe500" /> Novo Anúncio
         </button>
       </header>
-
       <div className="anuncios-page__controls">
         <div className="search-wrapper">
           <Search size={16} className="icon-search" />
@@ -273,7 +267,6 @@ const handleCreateSuccess = async (item: CriarAnuncioResponse) => {
           <ChevronDown size={16} className="icon-arrow" />
         </div>
       </div>
-
       <div className="anuncios-page__grid">
         {filtered.map((a) => {
           const mediaItems: MediaItem[] = [
@@ -320,22 +313,20 @@ const handleCreateSuccess = async (item: CriarAnuncioResponse) => {
           <p className="empty">Nenhum anúncio encontrado.</p>
         )}
       </div>
-
       <div className="anuncios-page__pagination">
         <button disabled>Anterior</button>
         <span>1 de 1</span>
         <button disabled>Próximo</button>
       </div>
-
       {isNewOpen && (
         <NewAnuncioModal
           isOpen
           servicoID={meuServicoId ?? 0}
           onClose={() => setIsNewOpen(false)}
-          onSuccess={handleCreateSuccess} 
+          onSuccess={handleCreateSuccess}
         />
       )}
-
+      ... // código igual até a parte do EditAnuncioModal
       {editing && (
         <EditAnuncioModal
           isOpen
@@ -346,14 +337,61 @@ const handleCreateSuccess = async (item: CriarAnuncioResponse) => {
             preco: editing.preco,
             categoria: editing.categoria,
             lugarEncontro: editing.lugarEncontro,
+
+            saidas: "",
+            idade: 0,
+            peso: 0,
+            altura: 0,
+
+            servicoPrestado: "",
+            servicoEspecial: "",
+
+            localizacao: {
+              endereco: "",
+              cidade: "",
+              estado: "",
+              bairro: "",
+              latitude: 0,
+              longitude: 0,
+            },
+
+            disponibilidade: "",
             disponibilidadeDataInicio: "",
             disponibilidadeDataFim: "",
             disponibilidadeHoraInicio: "",
             disponibilidadeHoraFim: "",
-            disponibilidade: "",
+
+            horariosAtendimento: [],
+
+            sobreUsuario: {
+              atendimento: [],
+              etnia: "",
+              relacionamento: "",
+              cabelo: "",
+              estatura: "",
+              corpo: "",
+              seios: "",
+              pubis: "",
+            },
+
+            caches: [
+              { formaPagamento: "", descricao: "Descrição", valor: 0 },
+              { formaPagamento: "", descricao: "Descrição", valor: 0 },
+              { formaPagamento: "", descricao: "Descrição", valor: 0 },
+              { formaPagamento: "", descricao: "Descrição", valor: 0 },
+              { formaPagamento: "", descricao: "Descrição", valor: 0 },
+              { formaPagamento: "", descricao: "Descrição", valor: 0 },
+              { formaPagamento: "", descricao: "Descrição", valor: 0 },
+              { formaPagamento: "", descricao: "Descrição", valor: 0 },
+            ],
+
             novasFotos: editing.fotos.map((f) => f.url),
             novosVideos: editing.videos.map((v) => v.url),
+
             dataCriacao: editing.rawDate,
+
+            fotos: [],
+            videos: [],
           }}
           onClose={() => setEditing(null)}
           onSuccess={(upd: EditarAnuncioResponse) => {

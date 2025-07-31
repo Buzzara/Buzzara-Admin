@@ -71,7 +71,17 @@ export interface EditarAnuncioResponse {
   idade: number;
   peso: number;
   altura: number;
+  preco: number;
+  categoria: string;
   dataCriacao: string;
+
+  disponibilidadeDataInicio: string;
+  disponibilidadeDataFim: string;
+  disponibilidadeHoraInicio: string;
+  disponibilidadeHoraFim: string;
+
+  novasFotos?: string[];
+  novosVideos?: string[];
 
   localizacao: {
     endereco: string;
@@ -88,7 +98,10 @@ export interface EditarAnuncioResponse {
     dataUpload: string;
   }>;
 
-  videos: string[]; // URLs dos vídeos ou caminhos retornados
+  videos: Array<{
+    videoAnuncioID: number;
+    url: string;
+  }>;
 
   sobreUsuario: {
     atendimento: string[];
@@ -107,7 +120,6 @@ export interface EditarAnuncioResponse {
     valor: number;
   }> | null;
 
-  /** Sempre virá preenchido com os horários aplicados */
   horariosAtendimento: Array<{
     diaSemana: string;
     atende: boolean;

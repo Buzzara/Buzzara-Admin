@@ -314,14 +314,14 @@ const EditAnuncioModal: React.FC<EditAnuncioModalProps> = ({
       }
 
       console.log("🚀 Dados brutos da API:");
-    console.log("servicoPrestado:", anuncio.servicoPrestado);
-    console.log("servicoEspecial:", anuncio.servicoEspecial);
+      console.log("servicoPrestado:", anuncio.servicoPrestado);
+      console.log("servicoEspecial:", anuncio.servicoEspecial);
 
-    console.log("🎯 Opções válidas (value) - Serviços:");
-    console.log(opcoesServicos.map((opt) => opt.value));
+      console.log("🎯 Opções válidas (value) - Serviços:");
+      console.log(opcoesServicos.map((opt) => opt.value));
 
-    console.log("🎯 Opções válidas (value) - Serviços Especiais:");
-    console.log(opcoesServicosEspeciais.map((opt) => opt.value));
+      console.log("🎯 Opções válidas (value) - Serviços Especiais:");
+      console.log(opcoesServicosEspeciais.map((opt) => opt.value));
 
       // Note: Fotos and video are not directly editable this way, this is a placeholder
       setFotos([]);
@@ -358,51 +358,26 @@ const EditAnuncioModal: React.FC<EditAnuncioModalProps> = ({
         servicoPrestado: servicosSelecionados.join(", "),
         servicoEspecial: servicosEspeciaisSelecionados.join(", "),
         idade: idadeApresentacao !== "" ? Number(idadeApresentacao) : 0,
-        peso:
-          pesoApresentacao !== undefined && pesoApresentacao !== ""
-            ? Number(pesoApresentacao)
-            : 0,
-        altura:
-          alturaApresentacao !== undefined && alturaApresentacao !== ""
-            ? Number(alturaApresentacao)
-            : 0,
+        peso: pesoApresentacao !== "" ? Number(pesoApresentacao) : 0,
+        altura: alturaApresentacao !== "" ? Number(alturaApresentacao) : 0,
 
+        // ✅ campos separados — não dá erro
         endereco: "",
         cidade,
         estado,
         bairro: "",
         latitude: 0,
         longitude: 0,
-        fotos: fotos,
-        video: video ?? undefined,
 
+        fotos,
+        video: video ?? undefined,
         disponibilidade: horario24h
           ? "24h"
           : `${startHour}:${startMinute} - ${endHour}:${endMinute}`,
-
         mesmoHorarioTodosOsDias: sameEveryDay === "Sim",
-
-        horarioUnico:
-          sameEveryDay === "Sim" && horarioUnico
-            ? {
-                diaSemana: horarioUnico.diaSemana,
-                atende: horarioUnico.atende,
-                horarioInicio: horarioUnico.horarioInicio,
-                horarioFim: horarioUnico.horarioFim,
-                vinteQuatroHoras: horarioUnico.vinteQuatroHoras,
-              }
-            : undefined,
-
+        horarioUnico: sameEveryDay === "Sim" ? horarioUnico : undefined,
         horariosIndividuais:
-          sameEveryDay === "Não" && Array.isArray(horariosIndividuais)
-            ? horariosIndividuais.map((h) => ({
-                diaSemana: h.diaSemana,
-                atende: h.atende,
-                horarioInicio: h.horarioInicio,
-                horarioFim: h.horarioFim,
-                vinteQuatroHoras: h.vinteQuatroHoras,
-              }))
-            : undefined,
+          sameEveryDay === "Não" ? horariosIndividuais : undefined,
 
         sobreUsuario: {
           atendimento: sobreVoce.atendimentoA,
@@ -416,7 +391,6 @@ const EditAnuncioModal: React.FC<EditAnuncioModalProps> = ({
           seios: sobreVoce.seios,
           pubis: sobreVoce.pubis,
         },
-
         caches: construirPayloadCachesUnificado(formasPagamento, linhasCache),
       };
 
