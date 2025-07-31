@@ -48,7 +48,6 @@ export interface EditarAnuncioParams {
     vinteQuatroHoras: boolean;
   };
 
-  /** SE mesmoHorarioTodosOsDias === false, este campo será usado */
   horariosIndividuais?: Array<{
     diaSemana: string;         // ex: "Segunda"
     atende: boolean;
