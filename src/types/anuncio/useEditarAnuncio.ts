@@ -128,3 +128,13 @@ export interface EditarAnuncioResponse {
     vinteQuatroHoras: boolean;
   }>;
 }
+export interface FotoAnuncioDTO {
+  fotoAnuncioID: number;
+  url: string;
+  dataUpload: string;
+}
+
+export interface VideoAnuncioDTO {
+  videoAnuncioID: number;
+  url: string;
+}
