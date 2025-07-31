@@ -150,7 +150,7 @@ export default function OndeAnunciarSection({
         <input
           type="text"
           className="modal__input"
-          placeholder="Ex.: Passa Quatro, Minas Gerais"
+          placeholder="Ex.: São Paulo, São Paulo, Centro"
           value={buscaLivre}
           onChange={(e) => setBuscaLivre(e.target.value)}
           style={{ marginTop: "4px" }}
