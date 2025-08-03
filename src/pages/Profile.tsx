@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ProfileCard from "../components/ProfileCard/ProfileCard";
+import CropperModal from "../components/CropperModal/CropperModal";
 import "../styles/profile.scss";
 
 import {
@@ -59,6 +60,9 @@ const Profile: React.FC = () => {
   const [errors, setErrors] = useState<string[]>([]);
   const [successMessage, setSuccessMessage] = useState<string>("");
 
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [tempCoverPreview, setTempCoverPreview] = useState<string | null>(null);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) navigate("/login");
@@ -112,8 +116,16 @@ const Profile: React.FC = () => {
   };
 
   const handleCoverSelect = (file: File) => {
+    const preview = URL.createObjectURL(file);
+    setTempCoverPreview(preview);
+    setShowCropModal(true);
+  };
+
+  const handleCropComplete = (croppedBlob: Blob) => {
+    const file = new File([croppedBlob], "cover.jpg", { type: "image/jpeg" });
     setCoverFile(file);
     setCoverUrl(URL.createObjectURL(file));
+    setShowCropModal(false);
   };
 
   const handleSavePhotos = async () => {
@@ -131,12 +143,8 @@ const Profile: React.FC = () => {
         coverPhoto: coverFile ?? undefined,
       });
 
-      if (result.fotoPerfilUrl) {
-        setProfileUrl(result.fotoPerfilUrl);
-      }
-      if (result.fotoCapaUrl) {
-        setCoverUrl(result.fotoCapaUrl);
-      }
+      if (result.fotoPerfilUrl) setProfileUrl(result.fotoPerfilUrl);
+      if (result.fotoCapaUrl) setCoverUrl(result.fotoCapaUrl);
 
       setProfileFile(null);
       setCoverFile(null);
@@ -259,10 +267,7 @@ const Profile: React.FC = () => {
     );
   }
 
-  if (
-    !userProfile ||
-    (!perfilAcompanhante && !userProfile.descricao && !userProfile.localizacao)
-  ) {
+  if (!userProfile || (!perfilAcompanhante && !userProfile.descricao && !userProfile.localizacao)) {
     return (
       <div className="profile-page">
         <p>
@@ -290,6 +295,14 @@ const Profile: React.FC = () => {
           uploadError={uploadError}
         />
       </section>
+
+      {showCropModal && tempCoverPreview && (
+        <CropperModal
+          image={tempCoverPreview}
+          onCancel={() => setShowCropModal(false)}
+          onCropComplete={handleCropComplete}
+        />
+      )}
 
       <section id="info" className="info-section">
         <h2>Informações Pessoais</h2>
