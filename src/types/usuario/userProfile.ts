@@ -2,24 +2,14 @@ export interface UserProfile {
   usuarioID: number
   nome: string
   email: string
-  senhaHash: string
-  dataCadastro: string          
-  refreshToken: string | null
-  refreshTokenExpiration: string | null
-  isValid: boolean
   telefone: string
-  cpf: string
-  genero: string
-  validationToken: string
-  localizacao: string
-  descricao: string
-  dataNascimento: string         
-  validationTokenExpiration: string
+  genero?: string | null
+  localizacao?: string | null
+  descricao?: string | null
+  dataNascimento?: string | null
   ativo: boolean
-  perfilAcompanhanteID?: number;
+  perfilAcompanhanteID?: number | null;
   role: string
   fotoPerfilUrl: string | null
   fotoCapaUrl: string | null
-  perfisAcompanhantes: []    
-  agendamentos: []            
 }

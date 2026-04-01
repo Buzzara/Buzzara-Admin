@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { usuariologin } from "../services/login/login";
 import { autenticacaoUsuario } from "../services/login/autenticacaoUsuario";
+import api from "../services/api";
 import type { AutenticacaoUsuarioResponse } from "../types/login/useAutenticacaoUsuario";
 import type { LoginResponse } from "../types/login/useLogin";
 
@@ -71,10 +72,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const logout = async () => {
     setLoading(true);
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      await api.post("/auth/logout");
     } catch {
       // ignore
     } finally {

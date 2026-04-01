@@ -42,7 +42,6 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/auth/logout", { method: "POST", credentials: "include" });
       await logout();
     } catch {
       console.error("Erro ao fazer logout");

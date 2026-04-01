@@ -28,25 +28,26 @@ interface Anuncio {
   id: string;
   title: string;
   descricao: string;
-  preco: number;
   status: "Ativo" | "Pausado" | "Expirado";
   rawDate: string;
   createdAt: string;
   fotos: { fotoAnuncioID: number; url: string }[];
   videos: { videoAnuncioID: number; url: string }[];
-  categoria: string;
   lugarEncontro: string;
+  disponibilidade?: string | null;
+  idade?: number | null;
+  peso?: number | null;
+  altura?: number | null;
+  saidas?: string;
+  servicoPrestado?: string;
+  servicoEspecial?: string;
 }
 
 function getMediaUrl(path: string): string {
   if (!path) return "";
   if (path.startsWith("http")) return path;
   const clean = path.startsWith("/") ? path : `/${path}`;
-  const baseUrl =
-    import.meta.env.MODE === "development"
-      ? "http://localhost:5001"
-      : "https://api.buzzara.com.br";
-  return `${baseUrl}${clean}`;
+  return clean;
 }
 
 const CardCarousel: React.FC<{ mediaItems: MediaItem[] }> = ({
@@ -164,9 +165,14 @@ const AnunciosPage: React.FC = () => {
             title: item.nome,
             descricao: item.descricao,
             rawDate: item.dataCriacao,
-            preco: item.preco,
-            categoria: item.categoria,
             lugarEncontro: item.lugarEncontro,
+            disponibilidade: item.disponibilidade,
+            idade: item.idade,
+            peso: item.peso,
+            altura: item.altura,
+            saidas: item.saidas,
+            servicoPrestado: item.servicoPrestado,
+            servicoEspecial: item.servicoEspecial,
             createdAt: new Date(item.dataCriacao).toLocaleDateString(),
             status: "Ativo",
             fotos: item.fotos ?? [],
@@ -191,17 +197,22 @@ const AnunciosPage: React.FC = () => {
       const created = data.find((d) => d.servicoID === item.servicoID);
       if (!created) return;
 
-      const novo: Anuncio = {
-        id: String(created.servicoID),
-        title: created.nome,
-        descricao: created.descricao,
-        rawDate: created.dataCriacao,
-        preco: created.preco,
-        categoria: created.categoria,
-        lugarEncontro: created.lugarEncontro,
-        createdAt: new Date(created.dataCriacao).toLocaleDateString(),
-        status: "Ativo",
-        fotos: created.fotos ?? [],
+        const novo: Anuncio = {
+          id: String(created.servicoID),
+          title: created.nome,
+          descricao: created.descricao,
+          rawDate: created.dataCriacao,
+          lugarEncontro: created.lugarEncontro,
+          disponibilidade: created.disponibilidade,
+          idade: created.idade,
+          peso: created.peso,
+          altura: created.altura,
+          saidas: created.saidas,
+          servicoPrestado: created.servicoPrestado,
+          servicoEspecial: created.servicoEspecial,
+          createdAt: new Date(created.dataCriacao).toLocaleDateString(),
+          status: "Ativo",
+          fotos: created.fotos ?? [],
         videos: created.videos ?? [],
       };
       setAnuncios((prev) => [novo, ...prev]);
@@ -275,7 +286,7 @@ const AnunciosPage: React.FC = () => {
           ];
 
           // URL de detalhe via ID
-          const detailUrl = `https://www.buzzara.com.br/profile/${a.id}`;
+          const detailUrl = `${import.meta.env.VITE_WEB_URL || "http://localhost:5174"}/profile/${a.id}`;
 
           return (
             <div key={a.id} className="card">
@@ -329,21 +340,21 @@ const AnunciosPage: React.FC = () => {
       {editing && (
         <EditAnuncioModal
           isOpen
-          anuncio={{
-            servicoID: Number(editing.id),
-            nome: editing.title,
-            descricao: editing.descricao,
-            preco: editing.preco,
-            categoria: editing.categoria,
-            lugarEncontro: editing.lugarEncontro,
+            anuncio={{
+              servicoID: Number(editing.id),
+              nome: editing.title,
+              descricao: editing.descricao,
+              preco: 0,
+              categoria: "",
+              lugarEncontro: editing.lugarEncontro,
 
-            saidas: "",
-            idade: 0,
-            peso: 0,
-            altura: 0,
+              saidas: editing.saidas ?? "",
+              idade: editing.idade ?? 0,
+              peso: editing.peso ?? 0,
+              altura: editing.altura ?? 0,
 
-            servicoPrestado: "",
-            servicoEspecial: "",
+              servicoPrestado: editing.servicoPrestado ?? "",
+              servicoEspecial: editing.servicoEspecial ?? "",
 
             localizacao: {
               endereco: "",
@@ -354,7 +365,7 @@ const AnunciosPage: React.FC = () => {
               longitude: 0,
             },
 
-            disponibilidade: "",
+              disponibilidade: editing.disponibilidade ?? "",
             disponibilidadeDataInicio: "",
             disponibilidadeDataFim: "",
             disponibilidadeHoraInicio: "",
@@ -401,9 +412,14 @@ const AnunciosPage: React.FC = () => {
               title: upd.nome,
               descricao: upd.descricao,
               rawDate: upd.dataCriacao,
-              categoria: upd.categoria,
               lugarEncontro: upd.lugarEncontro,
-              preco: upd.preco,
+              disponibilidade: upd.disponibilidade,
+              idade: upd.idade,
+              peso: upd.peso,
+              altura: upd.altura,
+              saidas: upd.saidas,
+              servicoPrestado: upd.servicoPrestado,
+              servicoEspecial: upd.servicoEspecial,
               createdAt: new Date(upd.dataCriacao).toLocaleDateString(),
               status: "Ativo",
               fotos: fotosArr.map((url, idx) => ({ fotoAnuncioID: idx, url })),

@@ -81,13 +81,6 @@ export default function Dashboard() {
     try {
       console.log("[Dashboard] Salvando perfil no backend:", data);
 
-      await fetch("https://api.buzzara.com.br/users/me/profile", {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
       await checkAuth();
 
       setShowModal(false);
